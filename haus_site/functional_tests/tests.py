@@ -13,14 +13,27 @@ class NewVisitorTest(LiveServerTestCase):
     def tearDown(self):
         self.browser.quit()
 
-    # As a visitor - I want to see a short description of what this
-    # app does/can do (on the splash page)
+    def test_basic_homepage_functionality(self):
+        self.browser.get(self.live_server_url)
 
-    # as a visitor, i'd like to create an account
+        # As a visitor - I want to see a short description of what this
+        # app does/can do (on the splash page)
+        home_body = self.browser.body
+        self.assertIn('HAUS is an open-source Home Automation User Service',
+                      home_body)
 
-    # as a member, I'd like to log in to a secure account
+        # as a visitor, I'd like to be invited to create an account
+        self.assertIn('Register', home_body)
 
-    # As a member, I'd like to be able to add a device to my dashboard
+        self.fail('Add more tests!')
 
-    # as a memeber, i'd like to customize which of my devices
-    # I see on my dashboard
+        # as a visitor, i'd like to create an account
+
+        # as a member, I'd like to log in to a secure account
+
+    def test_dashboard_functionality(self):
+        pass
+        # As a member, I'd like to be able to add a device to my dashboard
+
+        # as a memeber, i'd like to customize which of my devices
+        # I see on my dashboard
