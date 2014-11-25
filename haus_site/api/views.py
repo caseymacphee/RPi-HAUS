@@ -6,8 +6,7 @@ from rest_framework import viewsets, permissions
 from rest_framework.views import APIView
 from api.serializers import UserSerializer, GroupSerializer
 from api.serializers import DeviceSerializer
-from api.models import Device
-
+from rest_framework.response import Response
 
 class UserViewSet(viewsets.ModelViewSet):
     """
@@ -30,7 +29,7 @@ class DeviceListView(APIView):
     serializer_class = DeviceSerializer
 
     def get(self, request, format=None):
-        devices = request.user.devices.objects.all()
+        devices = request.user.devices.all()
         serializer = DeviceSerializer(devices, many=True)
         return Response(serializer.data)
 

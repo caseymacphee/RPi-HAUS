@@ -8,14 +8,14 @@ DEVICE_TYPE_CHOICES = (
 )
 
 
-class HausUser(User):
-    pass
+# class HausUser(User):
+#     pass
 
 
 # Ex: Weather Monitor (arduino)
 class Device(models.Model):
     name = models.CharField(default='', max_length=200)
-    user = models.ForeignKey(HausUser)
+    user = models.ForeignKey(User, related_name="devices")
     serialpath = models.CharField(max_length=200, default='')
     device_type = models.CharField(choices=DEVICE_TYPE_CHOICES,
                                    max_length=20)
@@ -24,7 +24,7 @@ class Device(models.Model):
 # Ex: Temperature Sensor, Light Switch (each key from arduino)
 class Atom(models.Model):
     name = models.CharField(default='', max_length=200)
-    device = models.ForeignKey(Device, default=None)
+    device = models.ForeignKey(Device, default=None, related_name="atoms")
     unit = models.CharField(default='', max_length=20)
 
 

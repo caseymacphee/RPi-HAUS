@@ -18,7 +18,7 @@ urlpatterns = patterns(
     url(r'^', include(router.urls)),
     url(r'^api-auth/', include('rest_framework.urls',
                                namespace='rest_framework')),
-    url(r'^devices/$', views.DeviceListView),  # Returns device list & atoms.
+    url(r'^devices/$', views.DeviceListView.as_view()),  # Returns device list & atoms.
     # url(r'^devices/(?P<device_pk>[0-9]+)/$',
     #     views.DeviceView.as_view()),  # Returns device info, takes device data
     # url(r'^devices/(?P<device_pk>[0-9]+)/current/$',
