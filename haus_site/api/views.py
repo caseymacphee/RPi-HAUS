@@ -7,6 +7,7 @@ from api.serializers import DeviceSerializer
 from rest_framework.response import Response
 from django.http import Http404
 from rest_framework import status
+from haus.models import Device, Atom
 
 
 class DeviceListView(APIView):
@@ -29,26 +30,28 @@ class DeviceDetailView(APIView):
     # NOTE: Unlike in the tutorial, request is passed to get_object()
     # because we're not currently importing models. We can import models
     # and change the query from request.....get() to a more direct model query.
-    def get_object(self, request, device_pk):
+    def get_object(self, device_pk):
         try:
             # This is based on the assumption that users can only see
             # devices that include those users as owners. (nb reverse relation)
             # Should this assumption be changed, this code must change as well:
-            return request.user.devices.get(pk=device_pk)
-        # The tutorial recommended specifically excepting on their model's
-        # DoesNotExist class (which our model would have too, if it was
-        # imported here, which is isn't right now).
-        except:
+            # return request.user.devices.get(pk=device_pk)
+
+            # Now changed to models and open-access:
+            return Device.objects.get(pk=device_pk)
+
+        except Device.DoesNotExist:
             raise Http404
 
     def get(self, request, device_pk, format=None):
-        device = self.get_object(request, device_pk)
+        device = self.get_object(device_pk)
         serializer = DeviceSerializer(device)
         return Response(serializer.data)
 
     def put(self, request, device_pk, format=None):
-        device = self.get_object(request, device_pk)
+        device = self.get_object(device_pk)
         serializer = DeviceSerializer(device, data=request.DATA)
+        print(str(serializer))
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
