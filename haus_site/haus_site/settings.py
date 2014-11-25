@@ -94,4 +94,4 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-AUTH_USER_MODEL = 'haus.HausUser'
+# AUTH_USER_MODEL = 'haus.HausUser'
