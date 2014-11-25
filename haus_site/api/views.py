@@ -13,16 +13,64 @@ from haus.models import Device, Atom
 class DeviceListView(APIView):
 
     def get(self, request, format=None):
-        devices = request.user.devices.all()
+        devices = Device.objects.filter(user_id=request.user.pk)
         serializer = DeviceSerializer(devices, many=True)
         return Response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = DeviceSerializer(data=request.DATA)
+
+        # print("\nRequest == " + str(dir(request)))
+
+        # print(request.user.id)
+
+        device = self.get_object(request)
+        serializer = DeviceSerializer(device, data=request.DATA)
+
+        print "\nrequest.DATA == " + str(request.DATA)
+
+        print(serializer.is_valid())
+
+        print serializer.attributes()
+
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            if serializer.was_created is True:
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            elif serializer.was_created is False:
+                return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get_object(self, request):
+
+        try:
+
+            return Device.objects.filter(user=request.user.id, name=request.DATA['name']).first()
+
+            #print("device_pk == " + str(device_pk))
+
+            # This is based on the assumption that users can only see
+            # devices that include those users as owners. (nb reverse relation)
+            # Should this assumption be changed, this code must change as well:
+            # return request.user.devices.get(pk=device_pk)
+
+            # Now changed to models and open-access:
+            # return Device.objects.get(pk=device_pk)
+
+        except Device.DoesNotExist:
+            # The device must then be made inside the serializer,
+            # which is expecting None.
+            return None
+
+    # def put(self, request, device_pk, format=None):
+    #     device = self.get_object(device_pk)
+    #     serializer = DeviceSerializer(device, data=request.DATA)
+
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(serializer.data)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 
 class DeviceDetailView(APIView):
@@ -51,7 +99,7 @@ class DeviceDetailView(APIView):
     def put(self, request, device_pk, format=None):
         device = self.get_object(device_pk)
         serializer = DeviceSerializer(device, data=request.DATA)
-        print(str(serializer))
+
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
