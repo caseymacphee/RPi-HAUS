@@ -1,40 +1,41 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 DEVICE_TYPE_CHOICES = (
-    ('monitor', 'Monitor Device',
-    'controller', 'Controller Device'),
+    ('monitor', 'Monitor Device'),
+    ('controller', 'Controller Device')
 )
 
 
-class User(models.User):
+class HausUser(User):
     pass
 
 
 # Ex: Weather Monitor (arduino)
 class Device(models.Model):
     name = models.CharField(default='', max_length=200)
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(HausUser)
     serialpath = models.CharField(max_length=200, default='')
     device_type = models.CharField(choices=DEVICE_TYPE_CHOICES,
                                    max_length=20)
 
 
 # Ex: Temperature Sensor, Light Switch (each key from arduino)
-class Atom(models.Models):
+class Atom(models.Model):
     name = models.CharField(default='', max_length=200)
     device = models.ForeignKey(Device, default=None)
     unit = models.CharField(default='', max_length=20)
 
 
 # value from key-value pair
-class Data(models.Models):
+class Data(models.Model):
     atom = models.ForeignKey(Atom, default=None)
     value = models.DecimalField(max_digits=10, decimal_places=5)
     timestamp = models.DateTimeField(db_index=True, auto_now=True)
 
 
-class CurrentData(models.Models):
+class CurrentData(models.Model):
     atom = models.ForeignKey(Atom, default=None)
     value = models.DecimalField(max_digits=10, decimal_places=5)
 
