@@ -24,6 +24,9 @@ class Device(models.Model):
     device_type = models.CharField(choices=DEVICE_TYPE_CHOICES,
                                    max_length=20)
 
+    class Meta:
+        unique_together = ('name', 'user')
+
 
 # Ex: Temperature Sensor, Light Switch (each key from arduino)
 class Atom(models.Model):
