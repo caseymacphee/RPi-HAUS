@@ -1,6 +1,13 @@
+<<<<<<< HEAD
+{% load staticfiles %}
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href='{% static "haus/dataview.css" %}'>
+=======
 <html>
 <head>
     <link rel="stylesheet" type="text/css" href="dataview.css">
+>>>>>>> 926b3055a7a888aea28644677a822e474e409bce
     <title>
         DATA
     </title>
@@ -37,3 +44,7 @@
     </div>
 </body>
 </html>
+<script src="http://code.jquery.com/jquery-1.11.1.min.js" type="text/javascript"></script>
+<script src="http://underscorejs.org/underscore-min.js" type="text/javascript"></script>
+<script src="http://backbonejs.org/backbone.js" type="text/javascript"></script>
+<script src="{% static 'haus/haus_backbone.js' %}" type="text/javascript"></script>
