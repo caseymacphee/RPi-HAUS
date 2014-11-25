@@ -21,17 +21,3 @@ class DeviceSerializer(serializers.Serializer):
 
     def get_atoms(self, obj):
         return [atom.name for atom in obj.atoms.all()]
-
-
-
-# class TimeSeriesSerializer(serializers.Serializer):
-#     pk = serializers.Field()
-#     value = serializers.DecimalField()
-#     owner = serializers.Field(source='owner.username')
-
-#     def restore_object(self, attrs, instance=None):
-#         if instance:
-#             instance.value = attrs.get('value', instance.value)
-#             return instance
-#         return TimeSeries(attrs)
-
