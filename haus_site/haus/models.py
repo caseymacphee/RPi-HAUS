@@ -8,8 +8,8 @@ DEVICE_TYPE_CHOICES = (
 )
 
 
-# class HausUser(User):
-#     pass
+class HausUser(User):
+    pass
 
 
 # Ex: Weather Monitor (arduino)
