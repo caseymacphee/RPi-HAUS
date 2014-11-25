@@ -1,0 +1,51 @@
+@import url(http://fonts.googleapis.com/css?family=Raleway:200);
+
+body {
+    background-color: #26587F;
+}
+
+.header,
+.subheader {
+    font-family: 'Raleway', sans-serif;
+    text-align: center;
+    font-weight: 200;
+}
+
+.container {
+    margin: auto;
+    border: 3px solid #FF9A00;
+    width: 600px;
+    padding: 30px;
+    border-radius: 20px;
+    background-color: white;
+}
+
+.haus-img {
+    margin-left: 130px;
+    margin-right: 110px;
+}
+
+.form-box {
+    width: 60%;
+    margin-left: 20%;
+    padding: 10px;
+    border: 3px solid #eee;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-size: 20px;
+}
+
+.form-button {
+    width: 40%;
+    margin-left: 30%;
+    height: 80px;
+    background-color: #FF9A00;
+    border-radius: 5px;
+    border: 0px;
+    color: white;
+    font-size: 28px;
+}
+
+.form-button:hover {
+    background-color: #B26C00;
+}
