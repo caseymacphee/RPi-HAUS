@@ -104,7 +104,6 @@ class DeviceListView(APIView):
     #     return Response(device_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 class CurrentAtomView(APIView):
 
     # From the URL, we get the device_id and the atom_id
@@ -125,10 +124,70 @@ class CurrentAtomView(APIView):
 
 
 
+class CurrentDeviceView(APIView):
+
+
+    def get(self, request, device_pk, format=None):
+
+        device = self.get_device_object(request, device_pk)
+
+        #print str(device.atoms.devices.all())
+
+        # for each_atom in device.atoms.filter
+
+        #     print each_atom
+
+        list_of_atoms = device.atoms.all()
+
+        current_data_serializer_list = []
+
+        for each_atom in list_of_atoms:
+
+            if each_atom.device.user.id == request.user.id:
+
+
+                current_data_object = self.get_current_data_object(each_atom.pk)
+
+                current_data_serializer = CurrentDataSerializer(current_data_object)
 
 
 
+                current_data_serializer_list.append(current_data_serializer.data)
 
+        return Response(current_data_serializer_list)
+
+
+
+    def get_current_data_object(self, atom_pk):
+
+        try:
+
+            return CurrentData.objects.get(atom=atom_pk)
+
+        except CurrentData.DoesNotExist:
+
+            return None
+
+
+    def get_device_object(self, request, device_pk):
+
+        try:
+            return Device.objects.filter(user=request.user.id, pk=device_pk).first()
+
+            #print("device_pk == " + str(device_pk))
+
+            # This is based on the assumption that users can only see
+            # devices that include those users as owners. (nb reverse relation)
+            # Should this assumption be changed, this code must change as well:
+            # return request.user.devices.get(pk=device_pk)
+
+            # Now changed to models and open-access:
+            # return Device.objects.get(pk=device_pk)
+
+        except Device.DoesNotExist:
+            # The device must then be made inside the device_serializer,
+            # which is expecting None.
+            return None
 
 
 
@@ -272,13 +331,3 @@ class DeviceDetailView(APIView):
 
 
 
-
-
-    # url(r'^devices/(?P<device_pk>[0-9]+)/$',
-    #     views.DeviceView.as_view()),  # Get device info, put device data
-    # url(r'^devices/(?P<device_pk>[0-9]+)/current/$',
-    #     views.CurrentDeviceView.as_view()),
-    # url(r'^devices/(?P<device_pk>[0-9]+)/atom/(?P<atom_pk>[0-9]+)/$',
-    #     views.AtomView.as_view()),
-    # url(r'^devices/(?P<device_pk>[0-9]+)/atom/(?P<atom_pk>[0-9]+)/current/$',
-    #     views.CurrentAtomView.as_view()),

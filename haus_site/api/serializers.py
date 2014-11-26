@@ -116,8 +116,7 @@ class DeviceSerializer(serializers.ModelSerializer):
 
             self.was_created = False
 
-            instance.name = attrs.get('device_name', instance.name)
-            instance.serialpath = attrs.get('serialpath', instance.serialpath)
+            instance.device_name = attrs.get('device_name', instance.device_name)
             instance.user = attrs.get('user_id', instance.user)
             instance.device_type = attrs.get('device_type', instance.device_type)
 
