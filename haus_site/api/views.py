@@ -66,24 +66,33 @@ class DeviceListView(APIView):
 
     def get_device_object(self, request):
 
-        try:
+        if request.DATA.get('id', default=None):
 
-            return Device.objects.filter(user=request.user.id, name=request.DATA['device_name']).first()
+            try:
+                return Device.objects.filter(user=request.user.id, id=request.DATA['id'])
 
-            #print("device_pk == " + str(device_pk))
+            except Device.DoesNotExist:
+                return None
 
-            # This is based on the assumption that users can only see
-            # devices that include those users as owners. (nb reverse relation)
-            # Should this assumption be changed, this code must change as well:
-            # return request.user.devices.get(pk=device_pk)
+        else:
 
-            # Now changed to models and open-access:
-            # return Device.objects.get(pk=device_pk)
+            try:
+                return Device.objects.filter(user=request.user.id, name=request.DATA['device_name']).first()
 
-        except Device.DoesNotExist:
-            # The device must then be made inside the device_serializer,
-            # which is expecting None.
-            return None
+                #print("device_pk == " + str(device_pk))
+
+                # This is based on the assumption that users can only see
+                # devices that include those users as owners. (nb reverse relation)
+                # Should this assumption be changed, this code must change as well:
+                # return request.user.devices.get(pk=device_pk)
+
+                # Now changed to models and open-access:
+                # return Device.objects.get(pk=device_pk)
+
+            except Device.DoesNotExist:
+                # The device must then be made inside the device_serializer,
+                # which is expecting None.
+                return None
 
     # def put(self, request, device_pk, format=None):
     #     device = self.get_device_object(device_pk)
