@@ -3,7 +3,7 @@
 # Create your views here.
 from rest_framework import permissions
 from rest_framework.views import APIView
-from api.serializers import DeviceSerializer, AtomSerializer
+from api.serializers import DeviceSerializer, AtomSerializer, DataSerializer, CurrentDataSerializer
 from rest_framework.response import Response
 from django.http import Http404
 from rest_framework import status
@@ -24,42 +24,39 @@ class DeviceListView(APIView):
         # print(request.user.id)
 
         device = self.get_device_object(request)
+
+        request.DATA['user_id'] = request.user.id
+
         device_serializer = DeviceSerializer(device, data=request.DATA)
 
-        print "\nrequest.DATA == " + str(request.DATA)
+        # print "\nrequest.DATA == " + str(request.DATA)
 
         # print(device_serializer.is_valid())
 
         # print device_serializer.attributes()
-
 
         if device_serializer.is_valid():
             device_serializer.save()
             device = self.get_device_object(request)
 
             # Assuming atoms value is a list of atom names
-            atom_names = request.DATA['atoms']
-            print (str("atom_names == " + str(atom_names)))
-            for atom_name in atom_names:
-                print atom_name
-                atom = self.get_atom_object(atom_name, device)
-                print("atom == " + str(atom))
-                atom_data = {'name': atom_name, 'device': device.pk}
-                print("atom_data == " + str(atom_data))
-                atom_serializer = AtomSerializer(atom, data=atom_data)
-                print("atom_serializer == " + str(dir(atom_serializer)))
+            # atom_names = request.DATA['atoms']
+            # print (str("atom_names == " + str(atom_names)))
+            # for atom_name in atom_names:
+            # print atom_name
+            # atom = self.get_atom_object(atom_name, device)
+            # print("atom == " + str(atom))
+            # atom_data = {'name': atom_name, 'device': device.pk}
+            # print("atom_data == " + str(atom_data))
+            # atom_serializer = AtomSerializer(atom, data=atom_data)
+            # print("atom_serializer == " + str(dir(atom_serializer)))
 
+            # for each_dirname in dir(atom_serializer):
+            #    print str(each_dirname) + ": " + (str(getattr(atom_serializer, each_dirname)))
 
-                for each_dirname in dir(atom_serializer):
-                    print str(each_dirname) + ": " + (str(getattr(atom_serializer, each_dirname)))
-
-                if atom_serializer.is_valid():
-                    print("atom_serializer.is_valid == True")
-                    atom_serializer.save()
-
-
-
-
+            # if atom_serializer.is_valid():
+            # print("atom_serializer.is_valid == True")
+            # atom_serializer.save()
 
             if device_serializer.was_created is True:
                 return Response(device_serializer.data, status=status.HTTP_201_CREATED)
@@ -67,21 +64,11 @@ class DeviceListView(APIView):
                 return Response(device_serializer.data, status=status.HTTP_202_ACCEPTED)
         return Response(device_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def get_atom_object(self, atom_name, device):
-
-        try:
-
-            return Atom.objects.filter(name=atom_name, device=device).first()
-
-        except Atom.AtomDoesNotExist:
-
-            return None
-
     def get_device_object(self, request):
 
         try:
 
-            return Device.objects.filter(user=request.user.id, name=request.DATA['name']).first()
+            return Device.objects.filter(user=request.user.id, name=request.DATA['device_name']).first()
 
             #print("device_pk == " + str(device_pk))
 
@@ -128,6 +115,16 @@ class DeviceDetailView(APIView):
         except Device.DoesNotExist:
             raise Http404
 
+    def get_atom_object(self, atom_name, device):
+
+        try:
+
+            return Atom.objects.filter(name=atom_name, device=device).first()
+
+        except Atom.AtomDoesNotExist:
+
+            return None
+
     def get(self, request, device_pk, format=None):
         device = self.get_device_object(device_pk)
         device_serializer = DeviceSerializer(device)
@@ -135,12 +132,90 @@ class DeviceDetailView(APIView):
 
     def put(self, request, device_pk, format=None):
         device = self.get_device_object(device_pk)
+        request.DATA['user_id'] = request.user.id
         device_serializer = DeviceSerializer(device, data=request.DATA)
 
         if device_serializer.is_valid():
             device_serializer.save()
             return Response(device_serializer.data)
         return Response(device_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def post(self, request, device_pk, format=None):
+
+        # print("\nRequest == " + str(dir(request)))
+
+        # print(request.user.id)
+
+        device_object = self.get_device_object(device_pk)
+        # device_serializer = DeviceSerializer(device, data=request.DATA)
+
+        # print "\nrequest.DATA == " + str(request.DATA)
+
+        # print(device_serializer.is_valid())
+
+        # print device_serializer.attributes()
+
+        # request.DATA['atoms'] now contains a dictionary of atom:value pairs:
+        atom_dictionary = request.DATA['atoms']
+        timestamp = request.DATA['timestamp']
+
+        atom_serializer_list = []
+
+        # print (str("atom_names == " + str(atom_names)))
+        for atom_key, atom_value in atom_dictionary.iteritems():
+            # print atom_name
+            atom_object = self.get_atom_object(atom_key, device_object)
+            # print("atom == " + str(atom))
+            atom_data = {'name': atom_key, 'value': atom_value, 'device': device_object.pk, 'timestamp': timestamp}
+            # print("atom_data == " + str(atom_data))
+            atom_serializer = AtomSerializer(atom_object, data=atom_data)
+            # print("atom_serializer == " + str(dir(atom_serializer)))
+
+            # for each_dirname in dir(atom_serializer):
+            #    print str(each_dirname) + ": " + (str(getattr(atom_serializer, each_dirname)))
+
+            if atom_serializer.is_valid():
+                # print("atom_serializer.is_valid == True")
+                atom_serializer_list.append(atom_serializer)
+
+            else:
+                return Response(device_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        data_to_return = []
+
+        for each_atom_serializer in atom_serializer_list:
+
+            each_atom_serializer.save()
+
+            data_to_return.append(each_atom_serializer.data)
+
+        for atom_key, atom_value in atom_dictionary.iteritems():
+
+            atom_object = self.get_atom_object(atom_key, device_object)
+
+            data_data = {'value': atom_value, 'atom': atom_object.pk, 'timestamp': timestamp}
+
+            data_serializer = DataSerializer(data=atom_data)
+
+            if data_serializer.is_valid():
+
+                data_serializer.save()
+
+                current_data_serializer = CurrentDataSerializer(data=atom_data)
+
+                if current_data_serializer.is_valid():
+
+                    current_data_serializer.save()
+
+        return Response(data_to_return, status=status.HTTP_202_ACCEPTED)
+
+
+
+
+
+
+
+
 
 
     # url(r'^devices/(?P<device_pk>[0-9]+)/$',
