@@ -3,7 +3,7 @@
 # Create your views here.
 from rest_framework import permissions
 from rest_framework.views import APIView
-from api.serializers import DeviceSerializer
+from api.serializers import DeviceSerializer, AtomSerializer
 from rest_framework.response import Response
 from django.http import Http404
 from rest_framework import status
@@ -14,8 +14,8 @@ class DeviceListView(APIView):
 
     def get(self, request, format=None):
         devices = Device.objects.filter(user_id=request.user.pk)
-        serializer = DeviceSerializer(devices, many=True)
-        return Response(serializer.data)
+        device_serializer = DeviceSerializer(devices, many=True)
+        return Response(device_serializer.data)
 
     def post(self, request, format=None):
 
@@ -23,24 +23,61 @@ class DeviceListView(APIView):
 
         # print(request.user.id)
 
-        device = self.get_object(request)
-        serializer = DeviceSerializer(device, data=request.DATA)
+        device = self.get_device_object(request)
+        device_serializer = DeviceSerializer(device, data=request.DATA)
 
         print "\nrequest.DATA == " + str(request.DATA)
 
-        print(serializer.is_valid())
+        # print(device_serializer.is_valid())
 
-        print serializer.attributes()
+        # print device_serializer.attributes()
 
-        if serializer.is_valid():
-            serializer.save()
-            if serializer.was_created is True:
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            elif serializer.was_created is False:
-                return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def get_object(self, request):
+        if device_serializer.is_valid():
+            device_serializer.save()
+            device = self.get_device_object(request)
+
+            # Assuming atoms value is a list of atom names
+            atom_names = request.DATA['atoms']
+            print (str("atom_names == " + str(atom_names)))
+            for atom_name in atom_names:
+                print atom_name
+                atom = self.get_atom_object(atom_name, device)
+                print("atom == " + str(atom))
+                atom_data = {'name': atom_name, 'device': device.pk}
+                print("atom_data == " + str(atom_data))
+                atom_serializer = AtomSerializer(atom, data=atom_data)
+                print("atom_serializer == " + str(dir(atom_serializer)))
+
+
+                for each_dirname in dir(atom_serializer):
+                    print str(each_dirname) + ": " + (str(getattr(atom_serializer, each_dirname)))
+
+                if atom_serializer.is_valid():
+                    print("atom_serializer.is_valid == True")
+                    atom_serializer.save()
+
+
+
+
+
+            if device_serializer.was_created is True:
+                return Response(device_serializer.data, status=status.HTTP_201_CREATED)
+            elif device_serializer.was_created is False:
+                return Response(device_serializer.data, status=status.HTTP_202_ACCEPTED)
+        return Response(device_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get_atom_object(self, atom_name, device):
+
+        try:
+
+            return Atom.objects.filter(name=atom_name, device=device).first()
+
+        except Atom.AtomDoesNotExist:
+
+            return None
+
+    def get_device_object(self, request):
 
         try:
 
@@ -57,28 +94,28 @@ class DeviceListView(APIView):
             # return Device.objects.get(pk=device_pk)
 
         except Device.DoesNotExist:
-            # The device must then be made inside the serializer,
+            # The device must then be made inside the device_serializer,
             # which is expecting None.
             return None
 
     # def put(self, request, device_pk, format=None):
-    #     device = self.get_object(device_pk)
-    #     serializer = DeviceSerializer(device, data=request.DATA)
+    #     device = self.get_device_object(device_pk)
+    #     device_serializer = DeviceSerializer(device, data=request.DATA)
 
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(serializer.data)
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    #     if device_serializer.is_valid():
+    #         device_serializer.save()
+    #         return Response(device_serializer.data)
+    #     return Response(device_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
 
 class DeviceDetailView(APIView):
 
-    # NOTE: Unlike in the tutorial, request is passed to get_object()
+    # NOTE: Unlike in the tutorial, request is passed to get_device_object()
     # because we're not currently importing models. We can import models
     # and change the query from request.....get() to a more direct model query.
-    def get_object(self, device_pk):
+    def get_device_object(self, device_pk):
         try:
             # This is based on the assumption that users can only see
             # devices that include those users as owners. (nb reverse relation)
@@ -92,18 +129,18 @@ class DeviceDetailView(APIView):
             raise Http404
 
     def get(self, request, device_pk, format=None):
-        device = self.get_object(device_pk)
-        serializer = DeviceSerializer(device)
-        return Response(serializer.data)
+        device = self.get_device_object(device_pk)
+        device_serializer = DeviceSerializer(device)
+        return Response(device_serializer.data)
 
     def put(self, request, device_pk, format=None):
-        device = self.get_object(device_pk)
-        serializer = DeviceSerializer(device, data=request.DATA)
+        device = self.get_device_object(device_pk)
+        device_serializer = DeviceSerializer(device, data=request.DATA)
 
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if device_serializer.is_valid():
+            device_serializer.save()
+            return Response(device_serializer.data)
+        return Response(device_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
     # url(r'^devices/(?P<device_pk>[0-9]+)/$',

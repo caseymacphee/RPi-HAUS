@@ -1,6 +1,33 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
-from haus.models import Device
+from haus.models import Device, Atom
+
+
+class AtomSerializer(serializers.ModelSerializer):
+
+    class Meta:
+
+        model = Atom
+
+    def restore_object(self, attrs, instance=None):
+
+        print("attrs == " + str(attrs))
+
+        # print str(instance)
+
+        if instance:
+
+            instance.name = attrs.get('name', instance.name)
+            instance.device = attrs.get('device', instance.device)
+
+            instance.save()
+            return instance
+
+        return Atom(**attrs)
+
+
+
+
 
 
 class DeviceSerializer(serializers.ModelSerializer):
@@ -49,6 +76,7 @@ class DeviceSerializer(serializers.ModelSerializer):
             instance.serialpath = attrs.get('serialpath', instance.serialpath)
             instance.user = attrs.get('user', instance.user)
             instance.device_type = attrs.get('device_type', instance.device_type)
+
             instance.save()
             return instance
 

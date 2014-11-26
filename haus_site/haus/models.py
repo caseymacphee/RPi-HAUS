@@ -33,10 +33,10 @@ class Atom(models.Model):
 
     def __unicode__(self):
         return self.name
-        
+
     name = models.CharField(default='', max_length=200)
     device = models.ForeignKey(Device, default=None, related_name="atoms")
-    unit = models.CharField(default='', max_length=20)
+    unit = models.CharField(default='', max_length=20, blank=True, null=True)
 
 
 # value from key-value pair
