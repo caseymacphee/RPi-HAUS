@@ -16,8 +16,8 @@ urlpatterns = patterns(
     url(r'^devices/(?P<device_pk>[0-9]+)/$',
         views.DeviceDetailView.as_view()),
 
-    url(r'^devices/(?P<device_pk>[0-9]+)/current/$',
-        views.CurrentDeviceView.as_view()),
+    # url(r'^devices/(?P<device_pk>[0-9]+)/current/$',
+    #     views.CurrentDeviceView.as_view()),
 
     # url(r'^devices/(?P<device_pk>[0-9]+)/atom/(?P<atom_pk>[0-9]+)/$',
     #     views.AtomView.as_view()),
