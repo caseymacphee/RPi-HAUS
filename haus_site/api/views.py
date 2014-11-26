@@ -7,7 +7,7 @@ from api.serializers import DeviceSerializer, AtomSerializer, DataSerializer, Cu
 from rest_framework.response import Response
 from django.http import Http404
 from rest_framework import status
-from haus.models import Device, Atom
+from haus.models import Device, Atom, CurrentData
 
 
 class DeviceListView(APIView):
@@ -96,6 +96,35 @@ class DeviceListView(APIView):
 
 
 
+class CurrentAtomView(APIView):
+
+    # From the URL, we get the device_id and the atom_id
+    def get(self, request, device_pk, atom_pk, format=None):
+        current_data = self.get_current_data_object(atom_pk)
+        current_data_serializer = CurrentDataSerializer(current_data)
+        return Response(current_data_serializer.data)
+
+    def get_current_data_object(self, atom_pk):
+
+        try:
+
+            return CurrentData.objects.get(atom=atom_pk)
+
+        except CurrentData.DoesNotExist:
+
+            return None
+
+
+
+
+
+
+
+
+
+
+
+
 
 class DeviceDetailView(APIView):
 
@@ -125,20 +154,30 @@ class DeviceDetailView(APIView):
 
             return None
 
+    def get_current_data_object(self, atom_pk):
+
+        try:
+
+            return CurrentData.objects.get(atom=atom_pk)
+
+        except CurrentData.DoesNotExist:
+
+            return None
+
     def get(self, request, device_pk, format=None):
         device = self.get_device_object(device_pk)
         device_serializer = DeviceSerializer(device)
         return Response(device_serializer.data)
 
-    def put(self, request, device_pk, format=None):
-        device = self.get_device_object(device_pk)
-        request.DATA['user_id'] = request.user.id
-        device_serializer = DeviceSerializer(device, data=request.DATA)
+    # def put(self, request, device_pk, format=None):
+    #     device = self.get_device_object(device_pk)
+    #     request.DATA['user_id'] = request.user.id
+    #     device_serializer = DeviceSerializer(device, data=request.DATA)
 
-        if device_serializer.is_valid():
-            device_serializer.save()
-            return Response(device_serializer.data)
-        return Response(device_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    #     if device_serializer.is_valid():
+    #         device_serializer.save()
+    #         return Response(device_serializer.data)
+    #     return Response(device_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def post(self, request, device_pk, format=None):
 
@@ -195,13 +234,21 @@ class DeviceDetailView(APIView):
 
             data_data = {'value': atom_value, 'atom': atom_object.pk, 'timestamp': timestamp}
 
-            data_serializer = DataSerializer(data=atom_data)
+            data_serializer = DataSerializer(data=data_data)
+
+            print(str(atom_key) + ", " + str(atom_value) + " == " + str(data_serializer.is_valid()))
+
+            print(str(data_serializer.errors))
 
             if data_serializer.is_valid():
 
                 data_serializer.save()
 
-                current_data_serializer = CurrentDataSerializer(data=atom_data)
+                atom_pk = atom_object.pk
+
+                current_data_object = self.get_current_data_object(atom_pk)
+
+                current_data_serializer = CurrentDataSerializer(current_data_object, data=data_data)
 
                 if current_data_serializer.is_valid():
 

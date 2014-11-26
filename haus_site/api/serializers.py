@@ -46,7 +46,7 @@ class DataSerializer(serializers.ModelSerializer):
 
         #     instance.save()
         #     return instance
-
+        print(str(attrs))
         return Data(**attrs)
 
 
@@ -67,6 +67,7 @@ class CurrentDataSerializer(serializers.ModelSerializer):
             instance.save()
             return instance
 
+        print(str(attrs))
         return CurrentData(**attrs)
 
 
