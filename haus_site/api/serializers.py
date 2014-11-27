@@ -1,6 +1,77 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
-from haus.models import Device
+from haus.models import Device, Atom, Data, CurrentData
+
+
+class AtomSerializer(serializers.ModelSerializer):
+
+    class Meta:
+
+        model = Atom
+
+
+
+
+    def restore_object(self, attrs, instance=None):
+
+        print("attrs == " + str(attrs))
+
+        # print str(instance)
+
+        if instance:
+
+            instance.atom_name = attrs.get('atom_name', instance.atom_name)
+            instance.device = attrs.get('device', instance.device)
+
+            instance.save()
+            return instance
+
+        return Atom(**attrs)
+
+
+
+class DataSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Data
+
+    def restore_object(self, attrs, instance=None):
+
+        # Instance should never exist when submitting data through the API.
+        # if instance:
+
+        #     instance.atom = attrs.get('atom', instance.atom)
+        #     instance.value = attrs.get('value', instance.value)
+        #     instance.timestamp = attrs.get('timestamp', instance.timestamp)
+
+        #     instance.save()
+        #     return instance
+        print(str(attrs))
+        return Data(**attrs)
+
+
+class CurrentDataSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CurrentData
+
+    def restore_object(self, attrs, instance=None):
+
+        if instance:
+
+            # For current data, the atom will never
+            # change once it has been assigned.
+            # instance.atom = attrs.get('atom', instance.atom)
+            instance.value = attrs.get('value', instance.value)
+
+            instance.save()
+            return instance
+
+        print(str(attrs))
+        return CurrentData(**attrs)
+
+
+
 
 
 class DeviceSerializer(serializers.ModelSerializer):
@@ -45,10 +116,10 @@ class DeviceSerializer(serializers.ModelSerializer):
 
             self.was_created = False
 
-            instance.name = attrs.get('name', instance.name)
-            instance.serialpath = attrs.get('serialpath', instance.serialpath)
-            instance.user = attrs.get('user', instance.user)
+            instance.device_name = attrs.get('device_name', instance.device_name)
+            instance.user = attrs.get('user_id', instance.user)
             instance.device_type = attrs.get('device_type', instance.device_type)
+
             instance.save()
             return instance
 
