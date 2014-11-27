@@ -27,6 +27,7 @@ class Device(models.Model):
 class Atom(models.Model):
 
     def __unicode__(self):
+
         return self.atom_name
 
     atom_name = models.CharField(default='', max_length=200)
