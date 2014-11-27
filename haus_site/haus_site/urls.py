@@ -6,7 +6,7 @@ from api import views
 urlpatterns = patterns(
     '',
     # Examples:
-    # url(r'^$', 'haus_site.views.home', name='home'),
+    url(r'^$', 'haus.views.home', name='home'),
     # url(r'^blog/', include('blog.urls')),
 
     url(r'^admin/', include(admin.site.urls)),
