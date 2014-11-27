@@ -102,7 +102,7 @@ class DeviceSerializer(serializers.ModelSerializer):
         model = Device
 
     def get_atoms(self, obj):
-        return [atom.name for atom in obj.atoms.all()]
+        return [atom.atom_name for atom in obj.atoms.all()]
 
     # Requires importing the models (so you can create a new entry in the DB)
 
