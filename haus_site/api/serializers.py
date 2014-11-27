@@ -20,7 +20,7 @@ class AtomSerializer(serializers.ModelSerializer):
 
         if instance:
 
-            instance.name = attrs.get('name', instance.name)
+            instance.atom_name = attrs.get('atom_name', instance.atom_name)
             instance.device = attrs.get('device', instance.device)
 
             instance.save()

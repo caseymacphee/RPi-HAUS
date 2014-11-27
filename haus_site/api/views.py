@@ -25,7 +25,7 @@ class DeviceListView(APIView):
 
         device = self.get_device_object(request)
 
-        request.DATA['user_id'] = request.user.id
+        request.DATA['user'] = request.user.id
 
         device_serializer = DeviceSerializer(device, data=request.DATA)
 
@@ -65,8 +65,8 @@ class DeviceListView(APIView):
         return Response(device_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get_device_object(self, request):
-
-        if request.DATA.get('id', default=None):
+        print str(request.DATA)
+        if request.DATA.get('id', None):
 
             try:
                 return Device.objects.filter(user=request.user.id, id=request.DATA['id'])
@@ -77,7 +77,7 @@ class DeviceListView(APIView):
         else:
 
             try:
-                return Device.objects.filter(user=request.user.id, name=request.DATA['device_name']).first()
+                return Device.objects.filter(user=request.user.id, device_name=request.DATA['device_name']).first()
 
                 #print("device_pk == " + str(device_pk))
 
@@ -216,7 +216,7 @@ class DeviceDetailView(APIView):
 
         try:
 
-            return Atom.objects.filter(name=atom_name, device=device).first()
+            return Atom.objects.filter(atom_name=atom_name, device=device).first()
 
         except Atom.AtomDoesNotExist:
 
@@ -273,7 +273,7 @@ class DeviceDetailView(APIView):
             # print atom_name
             atom_object = self.get_atom_object(atom_key, device_object)
             # print("atom == " + str(atom))
-            atom_data = {'name': atom_key, 'value': atom_value, 'device': device_object.pk, 'timestamp': timestamp}
+            atom_data = {'atom_name': atom_key, 'value': atom_value, 'device': device_object.pk, 'timestamp': timestamp}
             # print("atom_data == " + str(atom_data))
             atom_serializer = AtomSerializer(atom_object, data=atom_data)
             # print("atom_serializer == " + str(dir(atom_serializer)))
@@ -286,7 +286,7 @@ class DeviceDetailView(APIView):
                 atom_serializer_list.append(atom_serializer)
 
             else:
-                return Response(device_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                return Response(atom_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         data_to_return = []
 
