@@ -72,7 +72,7 @@ class DeviceListView(APIView):
         if request.DATA.get('id', None):
 
             try:
-                return Device.objects.filter(user=request.user.id, id=request.DATA['id'])
+                return Device.objects.filter(user=request.user.id, id=request.DATA['id'])[0]
 
             except Device.DoesNotExist:
                 return None
