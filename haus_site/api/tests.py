@@ -60,3 +60,16 @@ class DeviceAPITests(TestCase):
         new_device_list = client.get('/devices/')
         self.assertContains(new_device_list, "Newname")
         self.assertNotContains(new_device_list, oldname)
+
+    def test_post_atom_data(self):
+        atomdata = json.dumps({"timestamp": "5.5",
+                               "atoms": {"sats": "0", "date": "00/-1/2000",
+                                         "tempf": "71.7"}
+                               })
+        client = Client()
+        client.login(username="admin", password="admin")
+        response = client.get('/devices/')
+        devicedata = json.loads(response.content)[0]
+        response = client.post('/devices/%d/' % devicedata['id'],
+                               content_type='application/json', data=atomdata)
+        self.assertContains(response, "tempf", status_code=202)
