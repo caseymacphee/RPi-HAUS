@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from django.http import Http404
 from rest_framework import status
 from haus.models import Device, Atom, CurrentData
+from copy import copy
 
 
 class DeviceListView(APIView):
@@ -25,9 +26,11 @@ class DeviceListView(APIView):
 
         device = self.get_device_object(request)
 
-        request.DATA['user'] = request.user.id
+        requestdata = copy(request.DATA)
 
-        device_serializer = DeviceSerializer(device, data=request.DATA)
+        requestdata['user'] = request.user.id
+
+        device_serializer = DeviceSerializer(device, data=requestdata)
 
         # print "\nrequest.DATA == " + str(request.DATA)
 
