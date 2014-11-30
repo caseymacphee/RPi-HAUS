@@ -93,4 +93,3 @@ class DeviceAPITests(TestCase):
         self.assertContains(response, now_utc)
         self.assertContains(response, six_hours_ago_utc)
         self.assertNotContains(response, two_days_ago_utc)
-        # assert False
