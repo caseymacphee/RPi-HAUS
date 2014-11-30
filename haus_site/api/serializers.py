@@ -32,25 +32,35 @@ class AtomSerializer(serializers.ModelSerializer):
 
 class DataSerializer(serializers.ModelSerializer):
 
+    atom_name = serializers.SerializerMethodField('get_atom_name')
+
+    def get_atom_name(self, obj):
+        return obj.atom.atom_name
+
     class Meta:
         model = Data
 
-    def restore_object(self, attrs, instance=None):
+    # def restore_object(self, attrs, instance=None):
 
-        # Instance should never exist when submitting data through the API.
-        # if instance:
+    #     # Instance should never exist when submitting data through the API.
+    #     # if instance:
 
-        #     instance.atom = attrs.get('atom', instance.atom)
-        #     instance.value = attrs.get('value', instance.value)
-        #     instance.timestamp = attrs.get('timestamp', instance.timestamp)
+    #     #     instance.atom = attrs.get('atom', instance.atom)
+    #     #     instance.value = attrs.get('value', instance.value)
+    #     #     instance.timestamp = attrs.get('timestamp', instance.timestamp)
 
-        #     instance.save()
-        #     return instance
-        print(str(attrs))
-        return Data(**attrs)
+    #     #     instance.save()
+    #     #     return instance
+    #     print(str(attrs))
+    #     return Data(**attrs)
 
 
 class CurrentDataSerializer(serializers.ModelSerializer):
+    
+    atom_name = serializers.SerializerMethodField('get_atom_name')
+
+    def get_atom_name(self, obj):
+        return obj.atom.atom_name
 
     class Meta:
         model = CurrentData
@@ -71,10 +81,10 @@ class CurrentDataSerializer(serializers.ModelSerializer):
         return CurrentData(**attrs)
 
 
-class DataSerializer(serializers.ModelSerializer):
+# class DataSerializer(serializers.ModelSerializer):
 
-    class Meta:
-        model = Data
+#     class Meta:
+#         model = Data
 
 
 
@@ -106,7 +116,7 @@ class DeviceSerializer(serializers.ModelSerializer):
         model = Device
 
     def get_atoms(self, obj):
-        return [atom.atom_name for atom in obj.atoms.all()]
+        return {atom.atom_name: atom.pk for atom in obj.atoms.all()}
 
     # Requires importing the models (so you can create a new entry in the DB)
 
