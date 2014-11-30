@@ -113,9 +113,7 @@ class DeviceSerializer(serializers.ModelSerializer):
         print str(instance)
 
         if instance:
-
             self.was_created = False
-
             instance.device_name = attrs.get('device_name', instance.device_name)
             instance.user = attrs.get('user_id', instance.user)
             instance.device_type = attrs.get('device_type', instance.device_type)
