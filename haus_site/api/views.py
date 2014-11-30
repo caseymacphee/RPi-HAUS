@@ -12,6 +12,14 @@ from copy import copy
 
 
 class DeviceListView(APIView):
+    # (Not a good docstring, but important for testing.)
+    """
+    To add a new device during setup, the following view
+    expects data that looks like this:
+    {"device_name": "testdevice0",
+     "device_type": "monitor"}
+    """
+
 
     def get(self, request, format=None):
         devices = Device.objects.filter(user_id=request.user.pk)
@@ -198,6 +206,18 @@ class CurrentDeviceView(APIView):
 
 
 class DeviceDetailView(APIView):
+    # (Not a good docstring, but important for testing.)
+    """
+    To update the data (also adds atoms to a device),
+    the following view expects data that looks like this:
+    {"atoms":
+        {"AtomName": 325,
+         "AnotherAtomName": 465},
+     "timestamp": 93432432}
+    """
+
+
+
 
     # NOTE: Unlike in the tutorial, request is passed to get_device_object()
     # because we're not currently importing models. We can import models
