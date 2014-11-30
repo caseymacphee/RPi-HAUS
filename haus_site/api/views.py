@@ -7,9 +7,9 @@ from api.serializers import DeviceSerializer, AtomSerializer, DataSerializer, Cu
 from rest_framework.response import Response
 from django.http import Http404
 from rest_framework import status
-from haus.models import Device, Atom, CurrentData
+from haus.models import Device, Atom, CurrentData, Data
 from copy import copy
-
+from datetime import datetime, timedelta
 
 class DeviceListView(APIView):
     # (Not a good docstring, but important for testing.)
@@ -348,7 +348,16 @@ class DeviceDetailView(APIView):
         return Response(data_to_return, status=status.HTTP_202_ACCEPTED)
 
 
+class DataView(APIView):
 
+    def get(self, request, device_pk, atom_pk, format=None):
+        # get data from last 24 hours
+        one_day_ago = datetime.utcnow() - timedelta(days=1)
+        one_day_ago_uni = one_day_ago.strftime('%s')
+        data = Data.objects.filter(atom_id=atom_pk,
+                                   timestamp__gt=one_day_ago_uni)
+        data_serializer = DataSerializer(data, many=True)
+        return Response(data_serializer.data)
 
 
 

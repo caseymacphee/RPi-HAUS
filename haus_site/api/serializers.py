@@ -71,6 +71,10 @@ class CurrentDataSerializer(serializers.ModelSerializer):
         return CurrentData(**attrs)
 
 
+class DataSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Data
 
 
 
