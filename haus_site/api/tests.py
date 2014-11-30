@@ -1,9 +1,9 @@
 from __future__ import unicode_literals
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
-# Create your tests here.
+from datetime import datetime, timedelta
 
-from haus.models import Device
+from haus.models import Device, Atom, Data
 import json
 
 
@@ -73,3 +73,23 @@ class DeviceAPITests(TestCase):
         response = client.post('/devices/%d/' % devicedata['id'],
                                content_type='application/json', data=atomdata)
         self.assertContains(response, "tempf", status_code=202)
+
+    def test_get_day_of_data(self):
+        device = Device.objects.first()
+        Atom.objects.create(device=device, atom_name="atom_one")
+        atom = Atom.objects.first()
+        now = datetime.utcnow()
+        six_hours_ago = datetime.utcnow() - timedelta(hours=1)
+        two_days_ago = datetime.utcnow() - timedelta(days=2)
+        now_utc = now.strftime('%s')
+        six_hours_ago_utc = six_hours_ago.strftime('%s')
+        two_days_ago_utc = two_days_ago.strftime('%s')
+        Data.objects.create(atom=atom, value=1, timestamp=now_utc)
+        Data.objects.create(atom=atom, value=2, timestamp=six_hours_ago_utc)
+        Data.objects.create(atom=atom, value=3, timestamp=two_days_ago_utc)
+        client = Client()
+        client.login(username="admin", password="admin")
+        response = client.get('/devices/%d/atom/%d/' % (device.pk, atom.pk))
+        self.assertContains(response, now_utc)
+        self.assertContains(response, six_hours_ago_utc)
+        self.assertNotContains(response, two_days_ago_utc)
