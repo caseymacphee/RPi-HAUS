@@ -25,6 +25,10 @@ var DeviceCurrent = Backbone.Collection.extend({
     return '/devices/' + this.id + '/current/';
   },
 
+  comparator: function (item) {
+    return item.get('atom_name');
+  },
+
   startPolling : function(interval){
     this.Polling = true;
     if( interval ){
@@ -54,7 +58,7 @@ var DeviceListView = Backbone.View.extend({
 
   initialize:function () {
     this.model.bind("reset", this.render, this);
-    this.listenTo(this.model, 'change', this.render);
+    this.listenTo(this.model, 'add remove', this.render);
   },
 
   render:function () {
@@ -73,6 +77,7 @@ var DeviceView = Backbone.View.extend({
   initialize:function () {
     this.model.bind("reset", this.render, this);
     this.listenTo(this.model, 'draw', this.click_handler);
+    this.listenTo(this.model, 'change', this.render);
   },
 
   events: {
@@ -87,6 +92,11 @@ var DeviceView = Backbone.View.extend({
     current_device.id = this.model.get('id');
     current_device.device_name = this.model.get('device_name');
     current_device.fetch({success: function (model) {
+      if (typeof atomsView !== 'undefined') {
+        atomsView.remove_subviews();
+        atomsView.remove();
+        console.log("Removing old view");
+      }
       atomsView = new AtomsView({model: model});
       atomsView.render();
       model.startPolling(15000); //Every 15 seconds
@@ -108,22 +118,58 @@ var AtomsView = Backbone.View.extend({
 
   initialize:function () {
     this.model.bind("reset", this.render, this);
+    // this.listenTo(this.model, 'change', this.render);
+  },
+
+  subviews: [],
+
+  render:function () {
+    console.log("Rendering");
+    console.log(this);
+    $(this.el).empty();
+    $(this.el).append('<div class="title-box">' + this.model.device_name + "</div>");
+    if (this.subviews.length > 0) {
+      this.remove_subviews();
+    }
+
+    _.each(this.model.models, function (atom) {
+      new_subview = new AtomCurrentView({model: atom});
+      this.subviews.push(new_subview);
+      $(this.el).append(new_subview.render().el);
+    }, this);
+    this.container_div = $('.main-box').empty();
+    this.container_div.append($(this.el));
+    return this;
+  },
+
+  remove_subviews: function () {
+    _.each(this.subviews, function (subview) {
+      console.log("Removing subview");
+      subview.remove();
+    });
+    this.subviews = [];
+  },
+});
+
+var AtomCurrentView = Backbone.View.extend({
+  tagName: 'p',
+
+  initialize:function () {
+    this.model.bind("reset", this.render, this);
     this.listenTo(this.model, 'change', this.render);
   },
 
   render:function () {
-    container_div = $('.main-box').empty();
-    $(this.el).append('<div class="title-box">' + this.model.device_name + "</div>");
-    if (this.model.models.length > 0) {
-      timestamp = new Date(parseInt(this.model.models[0].get('timestamp')));
-      $(this.el).append('<h3>Updated: ' + timestamp.toDateString() + "</h3>");
+    console.log("rendering");
+    console.log(this);
+    if (this.model.has('atom_name')) {
+      timestamp = new Date(Number(this.model.get('timestamp')) * 1000);
+      $(this.el).html(this.model.get('atom_name') + ': ' +
+        this.model.get('value') + ', updated on ' + String(timestamp));
     }
-    _.each(this.model.models, function (atom) {
-      if (atom.has('atom_name')) {
-        $(this.el).append('<p>' + atom.get('atom_name') + ': ' + atom.get('value') + '</p>');
-      }
-    }, this);
-    container_div.append($(this.el));
+    else {
+      $(this.el).remove();
+    }
     return this;
   },
 });
@@ -139,7 +185,14 @@ var AppRouter = Backbone.Router.extend({
 var app_router = new AppRouter();
 
 app_router.on('route:defaultRoute', function () {
+  if (typeof current_device !== 'undefined') {
+    current_device.stopPolling();
+  }
   this.devices = new DeviceList();
+  if (typeof this.devicesView !== 'undefined') {
+    this.devicesView.remove();
+    console.log("Removing old devicesview");
+  }
   this.devicesView = new DeviceListView({model: this.devices, el: $('#device_links')});
 
   this.devices.fetch({success: function (model) {
@@ -149,6 +202,10 @@ app_router.on('route:defaultRoute', function () {
 
 app_router.on('route:showDeviceAtoms', function (id) {
   this.devices = new DeviceList();
+  if (typeof this.devicesView !== 'undefined') {
+    this.devicesView.remove();
+    console.log("Removing old devicesview");
+  }
   this.devicesView = new DeviceListView({model: this.devices, el: $('#device_links')});
   this.devices.fetch({success: function (model) {
     model.trigger('change');
