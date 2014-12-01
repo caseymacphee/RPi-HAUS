@@ -56,3 +56,4 @@ target/
 # Haus Specifics
 secrets.txt
 db_instructions.txt
+credentials.py

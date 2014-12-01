@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Imagr Registration') }}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'imagr_app:front_page' %}">Imagr Registration</a><h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
