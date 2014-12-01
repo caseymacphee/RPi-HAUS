@@ -21,6 +21,18 @@ class DeviceListView(APIView):
      "device_type": "monitor"}
     """
 
+    def get_permission_for_device(self, request, device):
+
+        try:
+            # We're trying to return a permission ONLY IF
+            # there is a permission for this device for this user.
+            current_user = request.user.id
+            return DevicePermission.objects.get(device=device,
+                                                user=current_user)
+
+        except DevicePermission.DoesNotExist:
+            return None
+
     def get(self, request, format=None):
 
         # When a Device is created a DevicePermission will also
@@ -52,6 +64,12 @@ class DeviceListView(APIView):
         # print(request.user.id)
 
         device = self.get_device_object(request)
+
+        permission = self.get_permission_for_device(request, device)
+        if not permission:
+            # Break the function and 403 if the user does not have permission:
+            # return HttpResponseForbidden("You do not have permission to view this device.")
+            return HttpResponseForbidden()
 
         requestdata = copy(request.DATA)
 
@@ -176,14 +194,13 @@ class CurrentAtomView(APIView):
     def get(self, request, device_pk, atom_pk, format=None):
 
         permission = self.get_permission_for_atom(request, atom_pk)
-
         if not permission:
-            return HttpResponseForbidden("You do not have permission to view this atom.")
+            # return HttpResponseForbidden("You do not have permission to view this atom.")
+            return HttpResponseForbidden()
 
-        else:
-            current_data = self.get_current_data_object(atom_pk)
-            current_data_serializer = CurrentDataSerializer(current_data)
-            return Response(current_data_serializer.data)
+        current_data = self.get_current_data_object(atom_pk)
+        current_data_serializer = CurrentDataSerializer(current_data)
+        return Response(current_data_serializer.data)
 
     def get_current_data_object(self, atom_pk):
 
@@ -217,7 +234,8 @@ class CurrentDeviceView(APIView):
         permission = self.get_permission_for_device(request, device)
         if not permission:
             # Break the function and 403 if the user does not have permission:
-            return HttpResponseForbidden("You do not have permission to view this device.")
+            # return HttpResponseForbidden("You do not have permission to view this device.")
+            return HttpResponseForbidden()
 
         # If the user does have permission, continue as normal.
         list_of_atoms = device.atoms.all()
@@ -319,8 +337,27 @@ class DeviceDetailView(APIView):
 
             return None
 
+    def get_permission_for_device(self, request, device):
+
+        try:
+            # We're trying to return a permission ONLY IF
+            # there is a permission for this device for this user.
+            current_user = request.user.id
+            return DevicePermission.objects.get(device=device,
+                                                user=current_user)
+
+        except DevicePermission.DoesNotExist:
+            return None
+
     def get(self, request, device_pk, format=None):
         device = self.get_device_object(device_pk)
+
+        permission = self.get_permission_for_device(request, device)
+        if not permission:
+            # Break the function and 403 if the user does not have permission:
+            # return HttpResponseForbidden("You do not have permission to view this device.")
+            return HttpResponseForbidden()
+
         device_serializer = DeviceSerializer(device)
         return Response(device_serializer.data)
 
@@ -341,13 +378,12 @@ class DeviceDetailView(APIView):
         # print(request.user.id)
 
         device_object = self.get_device_object(device_pk)
-        # device_serializer = DeviceSerializer(device, data=request.DATA)
 
-        # print "\nrequest.DATA == " + str(request.DATA)
-
-        # print(device_serializer.is_valid())
-
-        # print device_serializer.attributes()
+        permission = self.get_permission_for_device(request, device)
+        if not permission:
+            # Break the function and 403 if the user does not have permission:
+            # return HttpResponseForbidden("You do not have permission to view this device.")
+            return HttpResponseForbidden()
 
         # request.DATA['atoms'] now contains a dictionary of atom:value pairs:
         atom_dictionary = request.DATA['atoms']
@@ -414,7 +450,41 @@ class DeviceDetailView(APIView):
 
 class DataView(APIView):
 
+    def get_permission_for_device(self, request, device):
+
+        try:
+            # We're trying to return a permission ONLY IF
+            # there is a permission for this device for this user.
+            current_user = request.user.id
+            return DevicePermission.objects.get(device=device,
+                                                user=current_user)
+
+        except DevicePermission.DoesNotExist:
+            return None
+
+    def get_device_object(self, device_pk):
+        try:
+            # This is based on the assumption that users can only see
+            # devices that include those users as owners. (nb reverse relation)
+            # Should this assumption be changed, this code must change as well:
+            # return request.user.devices.get(pk=device_pk)
+
+            # Now changed to models and open-access:
+            return Device.objects.get(pk=device_pk)
+
+        except Device.DoesNotExist:
+            raise Http404
+
     def get(self, request, device_pk, atom_pk, format=None):
+
+        device = self.get_device_object(device_pk)
+
+        permission = self.get_permission_for_device(request, device)
+        if not permission:
+            # Break the function and 403 if the user does not have permission:
+            # return HttpResponseForbidden("You do not have permission to view this device.")
+            return HttpResponseForbidden()
+
         # get data from last 24 hours
         one_day_ago = datetime.utcnow() - timedelta(days=1)
         one_day_ago_uni = one_day_ago.strftime('%s')
@@ -422,8 +492,3 @@ class DataView(APIView):
                                    timestamp__gt=one_day_ago_uni)
         data_serializer = DataSerializer(data, many=True)
         return Response(data_serializer.data)
-
-
-
-
-
