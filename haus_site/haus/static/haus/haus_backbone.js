@@ -114,6 +114,10 @@ var AtomsView = Backbone.View.extend({
   render:function () {
     container_div = $('.main-box').empty();
     $(this.el).append('<div class="title-box">' + this.model.device_name + "</div>");
+    if (this.model.models.length > 0) {
+      timestamp = new Date(parseInt(this.model.models[0].get('timestamp')));
+      $(this.el).append('<h3>Updated: ' + timestamp.toDateString() + "</h3>");
+    }
     _.each(this.model.models, function (atom) {
       if (atom.has('atom_name')) {
         $(this.el).append('<p>' + atom.get('atom_name') + ': ' + atom.get('value') + '</p>');
