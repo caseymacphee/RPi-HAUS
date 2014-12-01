@@ -10,6 +10,8 @@ https://docs.djangoproject.com/en/1.7/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+from credentials import set_credentials
+set_credentials()
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 
