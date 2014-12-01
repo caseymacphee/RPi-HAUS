@@ -73,6 +73,7 @@ class CurrentDataSerializer(serializers.ModelSerializer):
             # change once it has been assigned.
             # instance.atom = attrs.get('atom', instance.atom)
             instance.value = attrs.get('value', instance.value)
+            instance.timestamp = attrs.get('timestamp', instance.timestamp)
 
             instance.save()
             return instance
