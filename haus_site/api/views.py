@@ -343,15 +343,18 @@ class DeviceDetailView(APIView):
         device_serializer = DeviceSerializer(device)
         return Response(device_serializer.data)
 
-    # def put(self, request, device_pk, format=None):
-    #     device = self.get_device_object(device_pk)
-    #     request.DATA['user_id'] = request.user.id
-    #     device_serializer = DeviceSerializer(device, data=request.DATA)
+    def get_superuser_permission_for_device(self, request, device):
 
-    #     if device_serializer.is_valid():
-    #         device_serializer.save()
-    #         return Response(device_serializer.data)
-    #     return Response(device_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            # We're trying to return a permission ONLY IF
+            # there is a permission for this device for this user.
+            current_user = request.user.id
+            return DevicePermission.objects.get(device=device,
+                                                user=current_user,
+                                                device_superuser=True)
+
+        except DevicePermission.DoesNotExist:
+            return None
 
     def post(self, request, device_pk, format=None):
 
@@ -361,8 +364,10 @@ class DeviceDetailView(APIView):
 
         device_object = self.get_device_object(device_pk)
 
-        permission = self.get_permission_for_device(request, device_object)
-        if not permission:
+        # You can GET a device if you're a permitted user, but you can't
+        # POST to a controller in particular if you are not a superuser.
+        superuser_permission = self.get_superuser_permission_for_device(request, device_object)
+        if not superuser_permission:
             # Break the function and 403 if the user does not have permission:
             # return HttpResponseForbidden("You do not have permission to view this device.")
             return HttpResponseForbidden()
