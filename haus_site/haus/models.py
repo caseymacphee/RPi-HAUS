@@ -53,15 +53,18 @@ class CurrentData(models.Model):
 class DailySummaryData(models.Model):
     atom = models.ForeignKey(Atom, default=None)
     avg_value = models.DecimalField(max_digits=10, decimal_places=5)
-    day = models.DateField()
+    day = models.DecimalField(max_digits=20, decimal_places=4)
 
 
-class DeviceUsers(models.Model):
+class DevicePermission(models.Model):
 
     def __unicode__(self):
         return self.user.username
 
-    user = models.ForeignKey(User, related_name="device_users")
+    user = models.ForeignKey(User, related_name="permitted_devices")
+    device = models.ForeignKey(Device, related_name="permitted_users")
     device_name = models.CharField(default='', max_length=200)
     device_superuser = models.BooleanField(default=False)
-    # "following" is implicit by existing in this table
+
+    class Meta:
+        unique_together = ('user', 'device')
