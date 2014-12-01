@@ -3,7 +3,7 @@ from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 
-from haus.models import Device, Atom, Data, CurrentData
+from haus.models import Device, Atom, Data, CurrentData, DevicePermission
 import json
 
 
@@ -60,19 +60,6 @@ class DeviceAPITests(TestCase):
         new_device_list = client.get('/devices/')
         self.assertContains(new_device_list, "Newname")
         self.assertNotContains(new_device_list, oldname)
-
-    def test_post_atom_data(self):
-        atomdata = json.dumps({"timestamp": "5.5",
-                               "atoms": {"sats": "0", "date": "00/-1/2000",
-                                         "tempf": "71.7"}
-                               })
-        client = Client()
-        client.login(username="admin", password="admin")
-        response = client.get('/devices/')
-        devicedata = json.loads(response.content)[0]
-        response = client.post('/devices/%d/' % devicedata['id'],
-                               content_type='application/json', data=atomdata)
-        self.assertContains(response, "tempf", status_code=202)
 
     def test_get_day_of_data(self):
         device = Device.objects.first()
@@ -150,11 +137,52 @@ class DeviceAPITests(TestCase):
         print(str(response))
         self.assertContains(response, atom.atom_name, status_code=200)
 
+    def test_permitted_post_atom_data(self):
+        atomdata = json.dumps({"timestamp": "5.5",
+                               "atoms": {"sats": "0", "date": "00/-1/2000",
+                                         "tempf": "71.7"}
+                               })
+        client = Client()
+        client.login(username="admin", password="admin")
+        response = client.get('/devices/')
+        devicedata = json.loads(response.content)[0]
+        response = client.post('/devices/%d/' % devicedata['id'],
+                               content_type='application/json', data=atomdata)
+        self.assertContains(response, "tempf", status_code=202)
 
 
 
 
+    def test_forbidden_post_atom_data(self):
+        atomdata = json.dumps({"timestamp": "5.5",
+                               "atoms": {"sats": "0", "date": "00/-1/2000",
+                                         "tempf": "71.7"}
+                               })
+        client = Client()
+        user = User.objects.get(username="regular_user")
+        device = Device.objects.get(device_name="testdevice")
+        DevicePermission.objects.create(user=user, device=device, device_superuser=False)
+        client.login(username="regular_user", password="password")
+        response = client.get('/devices/')
+        response = client.post('/devices/%d/' % device.id,
+                               content_type='application/json', data=atomdata)
+        self.assertNotContains(response, "tempf", status_code=403)
 
+
+    def test_second_user_permitted_post_atom_data(self):
+        atomdata = json.dumps({"timestamp": "5.5",
+                               "atoms": {"sats": "0", "date": "00/-1/2000",
+                                         "tempf": "71.7"}
+                               })
+        client = Client()
+        user = User.objects.get(username="regular_user")
+        device = Device.objects.get(device_name="testdevice")
+        DevicePermission.objects.create(user=user, device=device, device_superuser=True)
+        client.login(username="regular_user", password="password")
+        response = client.get('/devices/')
+        response = client.post('/devices/%d/' % device.id,
+                               content_type='application/json', data=atomdata)
+        self.assertContains(response, "tempf", status_code=202)
 
 
 
