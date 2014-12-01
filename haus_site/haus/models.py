@@ -19,6 +19,38 @@ class Device(models.Model):
     device_type = models.CharField(choices=DEVICE_TYPE_CHOICES,
                                    max_length=20)
 
+    @classmethod
+    def create(cls, device_name, user, device_type):
+
+        print("    Create was called in models.py")
+
+        # Reference:
+        # https://docs.djangoproject.com/
+        #     en/dev/ref/models/instances/#creating-objects
+
+        device = cls(device_name=device_name,
+                     user=user,
+                     device_type=device_type)
+
+        device.save()
+
+        new_device_permission = DevicePermission()
+        new_device_permission.user = user
+        new_device_permission.device = device
+        # NOTE: Users can change their particular DevicePermission's
+        # device_name, but it doesn't make sense to do it in Device.create()
+        # because the person who gets this particular DevicePermission is
+        # already naming it whatever they want. Instead, a view to modify
+        # DevicePermissions should include a way to change a particular
+        # DevicePermission's device_name field.
+        new_device_permission.device_name = device_name
+        # This is set to True because they created this Device.
+        # Users should be able to control Devices they create.
+        new_device_permission.device_superuser = True
+        new_device_permission.save()
+
+        return device
+
     class Meta:
         unique_together = ('device_name', 'user')
 
