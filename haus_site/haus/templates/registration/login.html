@@ -11,7 +11,7 @@
         <div ><img class='haus-img' src='{% static "haus/hausresized.png" %}' /></div>
         <h1 class='header'>Rpi-HAUS</h1>
         <h2 class='subheader'>The homepage for a smarter home</h2>
-        <form method="post" action="/">
+        <form method="post" action="">
             {% csrf_token %}
             {{ form.as_p }}
             <input type="submit" class='form-button' value="Login" />
