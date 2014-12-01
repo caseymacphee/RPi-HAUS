@@ -19,6 +19,10 @@ urlpatterns = patterns(
     # {"device_name": "testdevice0",
     #  "device_type": "monitor"}
     url(r'^devices/$', views.DeviceListView.as_view()),
+    url(r'^accounts/', include('registration.backends.default.urls')),
+    # url(r'^devices/(?P<device_pk>[0-9]+)/$',
+    #     views.DeviceView.as_view()),
+    # url(r'^devices/(?P<device_pk>[0-9]+)/current/$',
 
 
     # To update the data (also adds atoms to a device),
