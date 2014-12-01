@@ -1,12 +1,13 @@
+{% load staticfiles %}
 <html>
 <head>
     <title>LOGIN</title>
     <link href='http://fonts.googleapis.com/css?family=Raleway:200' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" type="text/css" href="login.css">
+    <link rel="stylesheet" type="text/css" href='{% static "haus/login.css" %}'>
 </head>
 <body>
     <div class='container'>
-        <div ><img class='haus-img' src='hausresized.png' /></div>
+        <div ><img class='haus-img' src='{% static "haus/hausresized.png" %}' /></div>
         <h1 class='header'>Rpi-HAUS</h1>
         <h2 class='subheader'>The homepage for a smarter home</h2>
         <form>
