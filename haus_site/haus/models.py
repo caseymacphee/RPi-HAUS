@@ -47,13 +47,13 @@ class Data(models.Model):
 
 class CurrentData(models.Model):
     atom = models.ForeignKey(Atom, default=None)
-    value = models.DecimalField(max_digits=10, decimal_places=5)
+    value = models.DecimalField(max_digits=100, decimal_places=10)
     timestamp = models.DecimalField(max_digits=20, decimal_places=4)
 
 
 class DailySummaryData(models.Model):
     atom = models.ForeignKey(Atom, default=None)
-    avg_value = models.DecimalField(max_digits=10, decimal_places=5)
+    avg_value = models.DecimalField(max_digits=100, decimal_places=10)
     day = models.DecimalField(max_digits=20, decimal_places=4)
 
 
