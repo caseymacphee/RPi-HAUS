@@ -100,8 +100,28 @@ class DeviceAPITests(TestCase):
         response = client.get('/devices/')
         self.assertNotContains(response, "testdevice")
 
-    # def test_atom_list_permissions(self):
-    #     client = Client()
-    #     client.login(username="regular_user", password="password")
-    #     response = client.get('/devices/')
-    #     self.assertNotContains(response, "testdevice")
+    def create_test_atoms(self):
+        device = Device.objects.first()
+        Atom.objects.create(device=device, atom_name="atom_one")
+        atom = Atom.objects.first()
+        now = datetime.utcnow()
+        six_hours_ago = datetime.utcnow() - timedelta(hours=1)
+        two_days_ago = datetime.utcnow() - timedelta(days=2)
+        now_utc = now.strftime('%s')
+        six_hours_ago_utc = six_hours_ago.strftime('%s')
+        two_days_ago_utc = two_days_ago.strftime('%s')
+        Data.objects.create(atom=atom, value=1, timestamp=now_utc)
+        Data.objects.create(atom=atom, value=2, timestamp=six_hours_ago_utc)
+        Data.objects.create(atom=atom, value=3, timestamp=two_days_ago_utc)
+
+        return device, atom
+
+    def test_atom_list_permissions(self):
+
+        device, atom = self.create_test_atoms()
+
+        client = Client()
+        client.login(username="regular_user", password="password")
+        response = client.get('/devices/%d/atom/%d/' % (device.pk, atom.pk))
+        # self.assertContains(response, "FORBIDDEN")  # Not yet implemented
+        self.assertNotContains(response, atom.atom_name)

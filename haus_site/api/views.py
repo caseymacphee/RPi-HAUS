@@ -295,7 +295,7 @@ class DeviceDetailView(APIView):
     {"atoms":
         {"AtomName": 325,
          "AnotherAtomName": 465},
-     "timestamp": 93432432}
+     "timestamp": 1417472498}
     """
 
 
@@ -379,7 +379,7 @@ class DeviceDetailView(APIView):
 
         device_object = self.get_device_object(device_pk)
 
-        permission = self.get_permission_for_device(request, device)
+        permission = self.get_permission_for_device(request, device_object)
         if not permission:
             # Break the function and 403 if the user does not have permission:
             # return HttpResponseForbidden("You do not have permission to view this device.")
