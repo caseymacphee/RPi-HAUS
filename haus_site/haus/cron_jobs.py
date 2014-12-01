@@ -24,6 +24,10 @@ def daily_summary_cron():
                                         timestamp__lt=yesterday_uni, atom=atom)
         day_data_list = [data.value for data in day_data_objs]
         print day_data_list
-        day_avg = sum(day_data_list) / len(day_data_list)
+        if day_data_list:
+            day_avg = sum(day_data_list) / len(day_data_list)
+        else:
+            day_avg = 0
+
         DailySummaryData.objects.create(atom=atom, avg_value=day_avg,
                                         day=yesterday_uni)
