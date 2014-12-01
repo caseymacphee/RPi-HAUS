@@ -70,6 +70,11 @@ var DeviceView = Backbone.View.extend({
   tagName:'div',
   className:'sidebar-item',
 
+  initialize:function () {
+    this.model.bind("reset", this.render, this);
+    this.listenTo(this.model, 'draw', this.click_handler);
+  },
+
   events: {
     'click': 'click_handler',
   },
@@ -108,7 +113,6 @@ var AtomsView = Backbone.View.extend({
 
   render:function () {
     container_div = $('.main-box').empty();
-    console.log("Rendering");
     $(this.el).append('<div class="title-box">' + this.model.device_name + "</div>");
     _.each(this.model.models, function (atom) {
       if (atom.has('atom_name')) {
@@ -136,6 +140,16 @@ app_router.on('route:defaultRoute', function () {
 
   this.devices.fetch({success: function (model) {
     model.trigger('change');
+  }});
+});
+
+app_router.on('route:showDeviceAtoms', function (id) {
+  this.devices = new DeviceList();
+  this.devicesView = new DeviceListView({model: this.devices, el: $('#device_links')});
+  this.devices.fetch({success: function (model) {
+    model.trigger('change');
+    device = model.get(id);
+    device.trigger('draw');
   }});
 });
 
