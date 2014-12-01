@@ -9,18 +9,44 @@ var DeviceList = Backbone.Collection.extend({
   url: '/devices',
 });
 
-var Atom = Backbone.Model.extend({
+var AtomCurrent = Backbone.Model.extend({
   url: function () {
     //This probably doesn't work, but you get the idea
+    //We don't fetch this directly anyway
     //return '/devices/' + this.device.id + '/atom/' + this.id + '/current';
     return '/devices/1/atom/1/current';  //Testing testing testing
   },
 });
 
 var DeviceCurrent = Backbone.Collection.extend({
-  model: Atom,
+  model: AtomCurrent,
+
   url: function () {
     return '/devices/' + this.id + '/current/';
+  },
+
+  startPolling : function(interval){
+    this.Polling = true;
+    if( interval ){
+      this.interval = interval;
+    }
+    this.executePolling(this, null, null);
+  },
+
+  stopPolling : function(){
+    this.Polling = false;
+  },
+
+  executePolling : function(model, response, options){
+    this.fetch({success : model.onFetch});
+  },
+
+  onFetch : function (model, response, options) {
+    if( model.Polling ){
+      setTimeout(function () {
+        model.executePolling(model, null, null);
+      }, model.interval);
+    }
   },
 });
 
@@ -45,37 +71,45 @@ var DeviceView = Backbone.View.extend({
   className:'sidebar-item',
 
   events: {
-    'click a': 'display_current_values',
+    'click': 'click_handler',
   },
 
-  render:function (eventName) {
-    var model_info = "<a href='#'>" + this.model.get('device_name')+ "</a>";
-    $(this.el).html(model_info);
+  click_handler: function () {
+    if (typeof current_device !== 'undefined') {
+      current_device.stopPolling();
+    }
+    current_device = new DeviceCurrent();
+    current_device.id = this.model.get('id');
+    current_device.device_name = this.model.get('device_name');
+    current_device.fetch({success: function (model) {
+      atomsView = new AtomsView({model: model});
+      atomsView.render();
+      model.startPolling(15000); //Every 15 seconds
+      app_router.navigate('/devices/' + model.id);
+    }});
+  },
+
+  render: function (eventName) {
+    var model_info = this.model.get('device_name');
+    $(this.el).text(model_info);
     return this;
   },
 
-  display_current_values: function (event) {
-    id = this.model.get('id');
-    name = this.model.get('device_name');
-    current_device = new DeviceCurrent();
-    current_device.id = id;
-    current_device.device_name = name;
-    current_device.fetch({success: function (model) {
-        atomsView = new AtomsView({model: model});
-        atomsView.render();
-      }
-    });
-  },
 });
 
 var AtomsView = Backbone.View.extend({
   tagName: 'div',
   className: 'monitor',
 
+  initialize:function () {
+    this.model.bind("reset", this.render, this);
+    this.listenTo(this.model, 'change', this.render);
+  },
+
   render:function () {
     container_div = $('.main-box').empty();
+    console.log("Rendering");
     $(this.el).append('<div class="title-box">' + this.model.device_name + "</div>");
-    this.atoms = this.model.models;
     _.each(this.model.models, function (atom) {
       if (atom.has('atom_name')) {
         $(this.el).append('<p>' + atom.get('atom_name') + ': ' + atom.get('value') + '</p>');
@@ -105,9 +139,6 @@ app_router.on('route:defaultRoute', function () {
   }});
 });
 
-app_router.on('route:showDeviceAtoms', function (id) {
-  this.trigger('route:defaultRoute');
-});
 // Start Backbone history a necessary step for bookmarkable URL's
 Backbone.history.start();
 

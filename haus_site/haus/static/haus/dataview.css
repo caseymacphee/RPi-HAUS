@@ -21,6 +21,10 @@ body {
     font-family: 'Roboto Slab', serif;
 }
 
+.sidebar-item:hover {
+    background-color: #26587F;
+}
+
 .container {
     margin: auto;
     width: 1100px;
