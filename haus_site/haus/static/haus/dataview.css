@@ -5,13 +5,58 @@ body {
     background-color: #26587F;
 }
 
+.icon {
+    height: 80px;
+    margin-left: 40px;
+}
+
+.header {
+    height: 80px;
+    margin-left: 40px;
+}
+
+
+.top-item-1{
+    width: 20%
+}
+
+
+.top-item-1 {
+    float: left;
+}
+
+.top-item-3 {
+    display: inline-block;
+    margin-left: 80px;
+    width: 15%;
+}
+
+.form-button {
+    width: 90%;
+    height: 50px;
+    background-color: #FF9A00;
+    border-radius: 5px;
+    border: 0px;
+    color: white;
+    font-size: 28px;
+}
+
+.top-item-2 {
+    width: 55%;
+    text-align: center;
+    height: 100px;
+    display: inline-block;
+}
+
 .top {
     border-bottom: 3px solid black;
-    text-align: center;
     padding: 10px;
     background-color: white;
     font-family: 'Raleway', sans-serif;
     font-weight: 300;
+    width: 1100px;
+    margin: auto;
+    height: 80px;
 }
 
 .sidebar-item {
@@ -19,6 +64,11 @@ body {
     border-bottom: 3px solid black;
     padding: 10px;
     font-family: 'Roboto Slab', serif;
+}
+
+.sidebar-item:hover {
+    background-color: #26587F;
+    cursor: pointer;
 }
 
 .container {
@@ -56,6 +106,10 @@ body {
     border-radius: 6px;
     margin-top: 20px;
     font-family: 'Roboto Slab', serif;
+}
+
+.updated {
+    color: red;
 }
 
 .toggle-button {

@@ -7,7 +7,19 @@
     </title>
 </head>
 <body>
-    <div class='top'><h1>I am a top nav bar, yo</h1></div>
+    <div class='top'>
+        <div class='top-item-1'>
+            <img class='icon' src='{% static "haus/hausresized.png" %}' />
+        </div>
+        <div class='top-item-2'>
+            <h1 class='header'>Welcome to your HAUS</h1>
+        </div>
+        <div class='top-item-3'>
+            <form action='/accounts/logout'>
+                <input type='submit' class='form-button' value='Logout'/>
+            </form>
+        </div>
+    </div>
     <div class='container'>
         <div class='sidebar'>
             <h1>Users's Devices</h1>
