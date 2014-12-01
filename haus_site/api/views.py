@@ -21,18 +21,6 @@ class DeviceListView(APIView):
      "device_type": "monitor"}
     """
 
-    def get_permission_for_device(self, request, device):
-
-        try:
-            # We're trying to return a permission ONLY IF
-            # there is a permission for this device for this user.
-            current_user = request.user.id
-            return DevicePermission.objects.get(device=device,
-                                                user=current_user)
-
-        except DevicePermission.DoesNotExist:
-            return None
-
     def get(self, request, format=None):
 
         # When a Device is created a DevicePermission will also
@@ -64,12 +52,6 @@ class DeviceListView(APIView):
         # print(request.user.id)
 
         device = self.get_device_object(request)
-
-        permission = self.get_permission_for_device(request, device)
-        if not permission:
-            # Break the function and 403 if the user does not have permission:
-            # return HttpResponseForbidden("You do not have permission to view this device.")
-            return HttpResponseForbidden()
 
         requestdata = copy(request.DATA)
 
