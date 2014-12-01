@@ -93,3 +93,15 @@ class DeviceAPITests(TestCase):
         self.assertContains(response, now_utc)
         self.assertContains(response, six_hours_ago_utc)
         self.assertNotContains(response, two_days_ago_utc)
+
+    def test_device_list_permissions(self):
+        client = Client()
+        client.login(username="regular_user", password="password")
+        response = client.get('/devices/')
+        self.assertNotContains(response, "testdevice")
+
+    # def test_atom_list_permissions(self):
+    #     client = Client()
+    #     client.login(username="regular_user", password="password")
+    #     response = client.get('/devices/')
+    #     self.assertNotContains(response, "testdevice")

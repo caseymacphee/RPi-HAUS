@@ -5,11 +5,12 @@ from rest_framework import permissions
 from rest_framework.views import APIView
 from api.serializers import DeviceSerializer, AtomSerializer, DataSerializer, CurrentDataSerializer
 from rest_framework.response import Response
-from django.http import Http404
+from django.http import Http404, HttpResponseForbidden
 from rest_framework import status
-from haus.models import Device, Atom, CurrentData, Data
+from haus.models import Device, Atom, CurrentData, Data, DevicePermission
 from copy import copy
 from datetime import datetime, timedelta
+
 
 class DeviceListView(APIView):
     # (Not a good docstring, but important for testing.)
@@ -20,10 +21,28 @@ class DeviceListView(APIView):
      "device_type": "monitor"}
     """
 
-
     def get(self, request, format=None):
-        devices = Device.objects.filter(user_id=request.user.pk)
-        device_serializer = DeviceSerializer(devices, many=True)
+
+        # When a Device is created a DevicePermission will also
+        # be created for the User who created that Device.
+        # devices_owned_by_user = Device.objects.filter(user_id=request.user.pk)
+
+        # Adding listing of Devices a User has a DevicePermission for.
+        permissions = DevicePermission.objects.filter(user=request.user.pk)
+
+        # Each DevicePermission has a Device, and each Device has a pk:
+        permitted_device_pks = [permission.device.pk for permission in permissions.all()]
+
+        # With the above info, we can compile a list of Device objects
+        # from the database that the User has a DevicePermission for:
+        devices_user_is_permitted_for = []
+        for each_device_pk in permitted_device_pks:
+            device_to_append = Device.objects.get(pk=each_device_pk)
+            devices_user_is_permitted_for.append(device_to_append)
+
+        device_serializer = DeviceSerializer(devices_user_is_permitted_for,
+                                             many=True)
+
         return Response(device_serializer.data)
 
     def post(self, request, format=None):
@@ -70,6 +89,12 @@ class DeviceListView(APIView):
             # atom_serializer.save()
 
             if device_serializer.was_created is True:
+                # If a Device was actually created in the serializer, we need
+                # to give the User a DevicePermission as well.
+                # This should NOT be done in views.py -- it's in models.py,
+                # and accomplished by adding a create() method to the
+                # Device class, which is called in serializers.py in lieu of
+                # calling the Device class outright.
                 return Response(device_serializer.data, status=status.HTTP_201_CREATED)
             elif device_serializer.was_created is False:
                 return Response(device_serializer.data, status=status.HTTP_202_ACCEPTED)
@@ -117,11 +142,48 @@ class DeviceListView(APIView):
 
 class CurrentAtomView(APIView):
 
+    def get_atom_object(self, atom_pk):
+
+        try:
+            return Atom.objects.get(pk=atom_pk)
+
+        except Atom.DoesNotExist:
+            return None
+
+    def get_permission_for_device(self, request, device):
+
+        try:
+            # We're trying to return a permission ONLY IF
+            # there is a permission for this device for this user.
+            current_user = request.user.id
+            return DevicePermission.objects.get(device=device,
+                                                user=current_user)
+
+        except DevicePermission.DoesNotExist:
+            return None
+
+    def get_permission_for_atom(self, request, atom_pk):
+
+        the_atom_in_question = self.get_atom_object(atom_pk)
+        if the_atom_in_question is not None:
+            device_of_this_atom = the_atom_in_question.device
+
+            permission = self.get_permission_for_device(request, device_of_this_atom)
+
+            return permission
+
     # From the URL, we get the device_id and the atom_id
     def get(self, request, device_pk, atom_pk, format=None):
-        current_data = self.get_current_data_object(atom_pk)
-        current_data_serializer = CurrentDataSerializer(current_data)
-        return Response(current_data_serializer.data)
+
+        permission = self.get_permission_for_atom(request, atom_pk)
+
+        if not permission:
+            return HttpResponseForbidden("You do not have permission to view this atom.")
+
+        else:
+            current_data = self.get_current_data_object(atom_pk)
+            current_data_serializer = CurrentDataSerializer(current_data)
+            return Response(current_data_serializer.data)
 
     def get_current_data_object(self, atom_pk):
 
@@ -134,20 +196,30 @@ class CurrentAtomView(APIView):
             return None
 
 
-
 class CurrentDeviceView(APIView):
 
+    def get_permission_for_device(self, request, device):
+
+        try:
+            # We're trying to return a permission ONLY IF
+            # there is a permission for this device for this user.
+            current_user = request.user.id
+            return DevicePermission.objects.get(device=device,
+                                                user=current_user)
+
+        except DevicePermission.DoesNotExist:
+            return None
 
     def get(self, request, device_pk, format=None):
 
         device = self.get_device_object(request, device_pk)
 
-        #print str(device.atoms.devices.all())
+        permission = self.get_permission_for_device(request, device)
+        if not permission:
+            # Break the function and 403 if the user does not have permission:
+            return HttpResponseForbidden("You do not have permission to view this device.")
 
-        # for each_atom in device.atoms.filter
-
-        #     print each_atom
-
+        # If the user does have permission, continue as normal.
         list_of_atoms = device.atoms.all()
 
         current_data_serializer_list = []
@@ -156,18 +228,11 @@ class CurrentDeviceView(APIView):
 
             if each_atom.device.user.id == request.user.id:
 
-
                 current_data_object = self.get_current_data_object(each_atom.pk)
-
                 current_data_serializer = CurrentDataSerializer(current_data_object)
-
-
-
                 current_data_serializer_list.append(current_data_serializer.data)
 
         return Response(current_data_serializer_list)
-
-
 
     def get_current_data_object(self, atom_pk):
 
@@ -178,7 +243,6 @@ class CurrentDeviceView(APIView):
         except CurrentData.DoesNotExist:
 
             return None
-
 
     def get_device_object(self, request, device_pk):
 
