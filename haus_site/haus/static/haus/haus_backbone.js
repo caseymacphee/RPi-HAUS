@@ -97,7 +97,11 @@ var DeviceView = Backbone.View.extend({
         atomsView.remove_subviews();
         atomsView.remove();
       }
-      atomsView = new AtomsView({model: model});
+      if (model.get('device_type') === "monitor") {
+        atomsView = new AtomsView({model: model});
+      } else {
+        atomsView = new ControllerView({model: model});
+      }
       atomsView.render();
       model.startPolling(15000); //Every 15 seconds
       app_router.navigate('/devices/' + model.id);
@@ -178,6 +182,77 @@ var AtomCurrentView = Backbone.View.extend({
     return this;
   },
 });
+
+var ControllerView = Backbone.View.extend({
+  tagName: 'div',
+  className: 'controller',
+
+  initialize:function () {
+    this.model.bind("reset", this.render, this);
+    this.listenTo(this.model, 'add remove', this.render);
+    this.listenTo(this.model, 'poll', this.reset_updates);
+  },
+
+  subviews: [],
+
+  render:function () {
+    $(this.el).empty();
+    $(this.el).append('<div class="title-box">' + this.model.device_name + "</div>");
+    if (this.subviews.length > 0) {
+      this.remove_subviews();
+    }
+
+    _.each(this.model.models, function (atom) {
+      new_subview = new StateView({model: atom});
+      this.subviews.push(new_subview);
+      $(this.el).append(new_subview.render().el);
+    }, this);
+    $(this.el).append('<input type="submit" value="Submit" class="toggle-button"></input>');
+    this.container_div = $('.main-box').empty();
+    this.container_div.append($(this.el));
+    return this;
+  },
+
+  reset_updates: function () {
+    $(this.el).children().removeClass('confirmed');
+  },
+
+  remove_subviews: function () {
+    _.each(this.subviews, function (subview) {
+      subview.remove();
+    });
+    this.subviews = [];
+  },
+});
+
+
+var StateView = Backbone.View.extend({
+  tagName: "div",
+
+  initialize:function () {
+    this.model.bind("reset", this.render, this);
+    this.listenTo(this.model, 'change', this.update);
+  },
+
+  update: function () {
+    this.render();
+    $(this.el).addClass('confirmed');
+  },
+
+  render:function () {
+    if (this.model.has('atom_name')) {
+      $(this.el).append('<input type="checkbox" class="controller-checkbox"> ' + this.model.get('atom_name'));
+      if (Number(this.model.get('value')) > 0) {
+        $(this.el).children(':last-child').attr('checked', true);
+      }
+    }
+    else {
+      $(this.el).remove();
+    }
+    return this;
+  },
+});
+
 
 // ROUTER GOES HERE
 var AppRouter = Backbone.Router.extend({
