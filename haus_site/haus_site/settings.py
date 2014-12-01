@@ -10,8 +10,8 @@ https://docs.djangoproject.com/en/1.7/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-import credentials
-credentials.set_credentials()
+from credentials import set_credentials
+set_credentials()
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 
@@ -109,3 +109,5 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
 # AUTH_USER_MODEL = 'haus.HausUser'
+
+LOGIN_REDIRECT_URL = '/'

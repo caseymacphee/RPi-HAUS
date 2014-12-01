@@ -1,5 +1,7 @@
+{% load staticfiles %}
 <html>
 <head>
+    <link rel="stylesheet" type="text/css" href="{% static 'haus/login.css'%}">
     <title>HAUS Registration</title>
 </head>
 <body>
@@ -7,8 +9,8 @@
         <h1 class='header'>Register for HAUS</h1>
     <form method="post" action="">
         {% csrf_token %}
-        {{ form.as_p}}
-        <input type="submit" value="Register" />
+        {{ form.as_p }}
+        <input type="submit" class='form-button' value="Register" />
     </form>
     </div>
 </body>
