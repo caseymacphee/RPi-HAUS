@@ -10,6 +10,8 @@ https://docs.djangoproject.com/en/1.7/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+import credentials
+credentials.set_credentials()
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 
@@ -26,6 +28,15 @@ TEMPLATE_DEBUG = True
 
 ALLOWED_HOSTS = []
 
+ACCOUNT_ACTIVATION_DAYS = 7 # One-week activation window; you may, of course, use a different value.
+REGISTRATION_AUTO_LOGIN = True # Automatically log the user in.
+
+EMAIL_HOST = 'smtp.mailgun.org'
+
+EMAIL_HOST_USER = 'postmaster@sandboxc05c58d13d3143b5a761460872fadcbc.mailgun.org'
+
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')  
+
 
 # Application definition
 
@@ -39,6 +50,7 @@ INSTALLED_APPS = (
     'haus',
     'rest_framework',
     'api',
+    'registration',
 )
 
 REST_FRAMEWORK = {
