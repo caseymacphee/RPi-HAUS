@@ -42,6 +42,7 @@ var DeviceCurrent = Backbone.Collection.extend({
   },
 
   executePolling : function(model, response, options){
+    this.trigger('poll');
     this.fetch({success : model.onFetch});
   },
 
@@ -95,7 +96,6 @@ var DeviceView = Backbone.View.extend({
       if (typeof atomsView !== 'undefined') {
         atomsView.remove_subviews();
         atomsView.remove();
-        console.log("Removing old view");
       }
       atomsView = new AtomsView({model: model});
       atomsView.render();
@@ -118,14 +118,13 @@ var AtomsView = Backbone.View.extend({
 
   initialize:function () {
     this.model.bind("reset", this.render, this);
-    // this.listenTo(this.model, 'change', this.render);
+    this.listenTo(this.model, 'add remove', this.render);
+    this.listenTo(this.model, 'poll', this.reset_updates);
   },
 
   subviews: [],
 
   render:function () {
-    console.log("Rendering");
-    console.log(this);
     $(this.el).empty();
     $(this.el).append('<div class="title-box">' + this.model.device_name + "</div>");
     if (this.subviews.length > 0) {
@@ -142,9 +141,12 @@ var AtomsView = Backbone.View.extend({
     return this;
   },
 
+  reset_updates: function () {
+    $(this.el).children().removeClass('updated');
+  },
+
   remove_subviews: function () {
     _.each(this.subviews, function (subview) {
-      console.log("Removing subview");
       subview.remove();
     });
     this.subviews = [];
@@ -156,12 +158,15 @@ var AtomCurrentView = Backbone.View.extend({
 
   initialize:function () {
     this.model.bind("reset", this.render, this);
-    this.listenTo(this.model, 'change', this.render);
+    this.listenTo(this.model, 'change', this.update);
+  },
+
+  update: function () {
+    this.render();
+    $(this.el).addClass('updated');
   },
 
   render:function () {
-    console.log("rendering");
-    console.log(this);
     if (this.model.has('atom_name')) {
       timestamp = new Date(Number(this.model.get('timestamp')) * 1000);
       $(this.el).html(this.model.get('atom_name') + ': ' +
@@ -204,7 +209,6 @@ app_router.on('route:showDeviceAtoms', function (id) {
   this.devices = new DeviceList();
   if (typeof this.devicesView !== 'undefined') {
     this.devicesView.remove();
-    console.log("Removing old devicesview");
   }
   this.devicesView = new DeviceListView({model: this.devices, el: $('#device_links')});
   this.devices.fetch({success: function (model) {

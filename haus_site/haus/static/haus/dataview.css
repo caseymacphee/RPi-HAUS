@@ -23,6 +23,7 @@ body {
 
 .sidebar-item:hover {
     background-color: #26587F;
+    cursor: pointer;
 }
 
 .container {
@@ -60,6 +61,10 @@ body {
     border-radius: 6px;
     margin-top: 20px;
     font-family: 'Roboto Slab', serif;
+}
+
+.updated {
+    color: red;
 }
 
 .toggle-button {
