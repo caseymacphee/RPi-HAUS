@@ -38,8 +38,8 @@ urlpatterns = patterns(
     #     views.CurrentDeviceView.as_view()),
 
 
-    # url(r'^devices/(?P<device_pk>[0-9]+)/atom/(?P<atom_pk>[0-9]+)/$',
-    #     views.AtomView.as_view()),
+    url(r'^devices/(?P<device_pk>[0-9]+)/atom/(?P<atom_pk>[0-9]+)/$',
+        views.DataView.as_view()),
 
     url(r'^devices/(?P<device_pk>[0-9]+)/atom/(?P<atom_pk>[0-9]+)/current/$',
         views.CurrentAtomView.as_view()),
