@@ -1,7 +1,54 @@
 /* Sets up the models, views, and router for the main HAUS site */
 
+// using jQuery
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie != '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+var csrftoken = getCookie('csrftoken');
+
+function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        }
+    }
+});
+
 var Device = Backbone.Model.extend({
-  urlRoot: '/devices',
+  url: function () {
+    return '/devices/' + this.get('id') + '/';
+  },
+  sync: function () {
+    console.log("Doing custom sync.");
+    console.log(this);
+    payload = {timestamp: this.get('timestamp'),
+               atoms: this.get('atoms')};
+    payload = JSON.stringify(payload);
+    console.log(payload);
+    $.ajax({
+      type: "POST",
+      url: this.url(),
+      data: payload,
+      dataType: "json",
+      contentType: "application/json; charset=utf-8"
+    });
+  },
 });
 
 var DeviceList = Backbone.Collection.extend({
@@ -92,12 +139,13 @@ var DeviceView = Backbone.View.extend({
     current_device = new DeviceCurrent();
     current_device.id = this.model.get('id');
     current_device.device_name = this.model.get('device_name');
+    current_device.device_type = this.model.get('device_type');
     current_device.fetch({success: function (model) {
       if (typeof atomsView !== 'undefined') {
         atomsView.remove_subviews();
         atomsView.remove();
       }
-      if (model.get('device_type') === "monitor") {
+      if (model.device_type === "monitor") {
         atomsView = new AtomsView({model: model});
       } else {
         atomsView = new ControllerView({model: model});
@@ -193,6 +241,28 @@ var ControllerView = Backbone.View.extend({
     this.listenTo(this.model, 'poll', this.reset_updates);
   },
 
+  events: {
+    'click .toggle-button': 'click_handler',
+  },
+
+  click_handler: function () {
+    controller = new Device();
+    atoms = {};
+    _.each($(this.el).children('.state').children(), function (child) {
+      console.log(child.checked);
+      if (child.checked) {
+        atoms[child.value] = 1;
+      } else {
+        atoms[child.value] = 0;
+      }
+    });
+    controller.set({id: this.model.id,
+                    timestamp: $.now() / 1000,
+                    atoms: atoms});
+    console.log(controller);
+    controller.save();
+  },
+
   subviews: [],
 
   render:function () {
@@ -228,6 +298,7 @@ var ControllerView = Backbone.View.extend({
 
 var StateView = Backbone.View.extend({
   tagName: "div",
+  className: "state",
 
   initialize:function () {
     this.model.bind("reset", this.render, this);
@@ -245,6 +316,7 @@ var StateView = Backbone.View.extend({
       if (Number(this.model.get('value')) > 0) {
         $(this.el).children(':last-child').attr('checked', true);
       }
+      $(this.el).children(':last-child').val(this.model.get('atom_name'));
     }
     else {
       $(this.el).remove();
