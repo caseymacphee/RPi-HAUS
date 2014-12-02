@@ -11,10 +11,10 @@ class DeviceAPITests(TestCase):
     def setUp(self):
         superuser = User.objects.create_superuser("admin", "", "admin")
         Device.create(device_name="testdevice", user=superuser,
-                              device_type="monitor")
+                      device_type="monitor")
         regular_user = User.objects.create_user("regular_user", "", "password")
         Device.create(device_name="seconddevice", user=regular_user,
-                              device_type="monitor")
+                      device_type="monitor")
 
     def test_existing_device_is_retrieved(self):
         """
@@ -109,7 +109,6 @@ class DeviceAPITests(TestCase):
         client = Client()
         client.login(username="regular_user", password="password")
         response = client.get('/devices/%d/atom/%d/' % (device.pk, atom.pk))
-        # self.assertContains(response, "FORBIDDEN")  # Not yet implemented
         self.assertNotContains(response, atom.atom_name, status_code=403)
 
     def test_atom_list_permission_allowed(self):
@@ -125,7 +124,7 @@ class DeviceAPITests(TestCase):
         client = Client()
         client.login(username="regular_user", password="password")
         response = client.get('/devices/%d/atom/%d/current/' % (device.pk, atom.pk))
-        # self.assertContains(response, "FORBIDDEN")  # Not yet implemented
+        self.assertContains(response, "do not have permission", status_code=403)
         self.assertNotContains(response, atom.atom_name, status_code=403)
 
     def test_atom_current_data_permission_allowed(self):
@@ -133,7 +132,6 @@ class DeviceAPITests(TestCase):
         client = Client()
         client.login(username="admin", password="admin")
         response = client.get('/devices/%d/atom/%d/current/' % (device.pk, atom.pk))
-        # self.assertContains(response, "FORBIDDEN")  # Not yet implemented
         print(str(response))
         self.assertContains(response, atom.atom_name, status_code=200)
 
@@ -150,9 +148,6 @@ class DeviceAPITests(TestCase):
                                content_type='application/json', data=atomdata)
         self.assertContains(response, "tempf", status_code=202)
 
-
-
-
     def test_forbidden_post_atom_data(self):
         atomdata = json.dumps({"timestamp": "5.5",
                                "atoms": {"sats": "0", "date": "00/-1/2000",
@@ -166,8 +161,8 @@ class DeviceAPITests(TestCase):
         response = client.get('/devices/')
         response = client.post('/devices/%d/' % device.id,
                                content_type='application/json', data=atomdata)
+        self.assertContains(response, "do not have permission", status_code=403)
         self.assertNotContains(response, "tempf", status_code=403)
-
 
     def test_second_user_permitted_post_atom_data(self):
         atomdata = json.dumps({"timestamp": "5.5",
