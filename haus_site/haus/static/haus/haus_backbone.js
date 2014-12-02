@@ -35,12 +35,9 @@ var Device = Backbone.Model.extend({
     return '/devices/' + this.get('id') + '/';
   },
   sync: function () {
-    console.log("Doing custom sync.");
-    console.log(this);
     payload = {timestamp: this.get('timestamp'),
                atoms: this.get('atoms')};
     payload = JSON.stringify(payload);
-    console.log(payload);
     $.ajax({
       type: "POST",
       url: this.url(),
@@ -170,7 +167,7 @@ var AtomsView = Backbone.View.extend({
 
   initialize:function () {
     this.model.bind("reset", this.render, this);
-    this.listenTo(this.model, 'add remove', this.render);
+    // this.listenTo(this.model, 'add remove', this.render);
     this.listenTo(this.model, 'poll', this.reset_updates);
   },
 
@@ -237,7 +234,7 @@ var ControllerView = Backbone.View.extend({
 
   initialize:function () {
     this.model.bind("reset", this.render, this);
-    this.listenTo(this.model, 'add remove', this.render);
+    // this.listenTo(this.model, 'add remove', this.render);
     this.listenTo(this.model, 'poll', this.reset_updates);
   },
 
@@ -249,17 +246,20 @@ var ControllerView = Backbone.View.extend({
     controller = new Device();
     atoms = {};
     _.each($(this.el).children('.state').children(), function (child) {
-      console.log(child.checked);
       if (child.checked) {
         atoms[child.value] = 1;
       } else {
         atoms[child.value] = 0;
       }
     });
+    timestamp = $.now() / 1000;
     controller.set({id: this.model.id,
-                    timestamp: $.now() / 1000,
+                    timestamp: timestamp,
                     atoms: atoms});
-    console.log(controller);
+    _.each(this.subviews, function (view) {
+      view.timestamp = timestamp;
+    });
+
     controller.save();
   },
 
@@ -307,10 +307,13 @@ var StateView = Backbone.View.extend({
 
   update: function () {
     this.render();
-    $(this.el).addClass('confirmed');
+    if ((this.model.get('timestamp') - this.timestamp) > 0.1) {
+      $(this.el).addClass('confirmed');
+    }
   },
 
   render:function () {
+    $(this.el).empty();
     if (this.model.has('atom_name')) {
       $(this.el).append('<input type="checkbox" class="controller-checkbox"> ' + this.model.get('atom_name'));
       if (Number(this.model.get('value')) > 0) {
@@ -343,7 +346,6 @@ app_router.on('route:defaultRoute', function () {
   this.devices = new DeviceList();
   if (typeof this.devicesView !== 'undefined') {
     this.devicesView.remove();
-    console.log("Removing old devicesview");
   }
   this.devicesView = new DeviceListView({model: this.devices, el: $('#device_links')});
 

@@ -108,7 +108,8 @@ body {
     font-family: 'Roboto Slab', serif;
 }
 
-.updated {
+.updated,
+.confirmed {
     color: red;
 }
 
