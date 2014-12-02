@@ -10,6 +10,7 @@ from rest_framework import status
 from haus.models import Device, Atom, CurrentData, Data, DevicePermission
 from copy import copy
 from datetime import datetime, timedelta
+import json
 
 
 class DeviceListView(APIView):
@@ -177,8 +178,7 @@ class CurrentAtomView(APIView):
 
         permission = self.get_permission_for_atom(request, atom_pk)
         if not permission:
-            # return HttpResponseForbidden("You do not have permission to view this atom.")
-            return HttpResponseForbidden()
+            return Response(data={'message': 'You do not have permission to view this device.'}, status=status.HTTP_403_FORBIDDEN)
 
         current_data = self.get_current_data_object(atom_pk)
         current_data_serializer = CurrentDataSerializer(current_data)
@@ -216,8 +216,7 @@ class CurrentDeviceView(APIView):
         permission = self.get_permission_for_device(request, device)
         if not permission:
             # Break the function and 403 if the user does not have permission:
-            # return HttpResponseForbidden("You do not have permission to view this device.")
-            return HttpResponseForbidden()
+            return Response(data={'message': 'You do not have permission to view this device.'}, status=status.HTTP_403_FORBIDDEN)
 
         # If the user does have permission, continue as normal.
         list_of_atoms = device.atoms.all()
@@ -337,8 +336,7 @@ class DeviceDetailView(APIView):
         permission = self.get_permission_for_device(request, device)
         if not permission:
             # Break the function and 403 if the user does not have permission:
-            # return HttpResponseForbidden("You do not have permission to view this device.")
-            return HttpResponseForbidden()
+            return Response(data={'message': 'You do not have permission to view this device.'}, status=status.HTTP_403_FORBIDDEN)
 
         device_serializer = DeviceSerializer(device)
         return Response(device_serializer.data)
@@ -368,9 +366,9 @@ class DeviceDetailView(APIView):
         # POST to a controller in particular if you are not a superuser.
         superuser_permission = self.get_superuser_permission_for_device(request, device_object)
         if not superuser_permission:
-            # Break the function and 403 if the user does not have permission:
-            # return HttpResponseForbidden("You do not have permission to view this device.")
-            return HttpResponseForbidden()
+            # Break the function and 403 if the user
+            # does not have superuser permission:
+            return Response(data={'message': 'You do not have permission to post to this device.'}, status=status.HTTP_403_FORBIDDEN)
 
         # request.DATA['atoms'] now contains a dictionary of atom:value pairs:
         atom_dictionary = request.DATA['atoms']
@@ -469,8 +467,7 @@ class DataView(APIView):
         permission = self.get_permission_for_device(request, device)
         if not permission:
             # Break the function and 403 if the user does not have permission:
-            # return HttpResponseForbidden("You do not have permission to view this device.")
-            return HttpResponseForbidden()
+            return Response(data={'message': 'You do not have permission to view this device.'}, status=status.HTTP_403_FORBIDDEN)
 
         # get data from last 24 hours
         one_day_ago = datetime.utcnow() - timedelta(days=1)
