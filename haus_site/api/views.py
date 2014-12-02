@@ -1,6 +1,4 @@
-# from django.shortcuts import render
 
-# Create your views here.
 from rest_framework import permissions
 from rest_framework.views import APIView
 from api.serializers import DeviceSerializer, AtomSerializer, DataSerializer, CurrentDataSerializer
@@ -10,7 +8,6 @@ from rest_framework import status
 from haus.models import Device, Atom, CurrentData, Data, DevicePermission
 from copy import copy
 from datetime import datetime, timedelta
-import json
 
 
 class DeviceListView(APIView):
@@ -23,10 +20,6 @@ class DeviceListView(APIView):
     """
 
     def get(self, request, format=None):
-
-        # When a Device is created a DevicePermission will also
-        # be created for the User who created that Device.
-        # devices_owned_by_user = Device.objects.filter(user_id=request.user.pk)
 
         # Adding listing of Devices a User has a DevicePermission for.
         permissions = DevicePermission.objects.filter(user=request.user.pk)
@@ -48,10 +41,6 @@ class DeviceListView(APIView):
 
     def post(self, request, format=None):
 
-        # print("\nRequest == " + str(dir(request)))
-
-        # print(request.user.id)
-
         device = self.get_device_object(request)
 
         requestdata = copy(request.DATA)
@@ -60,34 +49,9 @@ class DeviceListView(APIView):
 
         device_serializer = DeviceSerializer(device, data=requestdata)
 
-        # print "\nrequest.DATA == " + str(request.DATA)
-
-        # print(device_serializer.is_valid())
-
-        # print device_serializer.attributes()
-
         if device_serializer.is_valid():
             device_serializer.save()
             device = self.get_device_object(request)
-
-            # Assuming atoms value is a list of atom names
-            # atom_names = request.DATA['atoms']
-            # print (str("atom_names == " + str(atom_names)))
-            # for atom_name in atom_names:
-            # print atom_name
-            # atom = self.get_atom_object(atom_name, device)
-            # print("atom == " + str(atom))
-            # atom_data = {'name': atom_name, 'device': device.pk}
-            # print("atom_data == " + str(atom_data))
-            # atom_serializer = AtomSerializer(atom, data=atom_data)
-            # print("atom_serializer == " + str(dir(atom_serializer)))
-
-            # for each_dirname in dir(atom_serializer):
-            #    print str(each_dirname) + ": " + (str(getattr(atom_serializer, each_dirname)))
-
-            # if atom_serializer.is_valid():
-            # print("atom_serializer.is_valid == True")
-            # atom_serializer.save()
 
             if device_serializer.was_created is True:
                 # If a Device was actually created in the serializer, we need
@@ -116,29 +80,10 @@ class DeviceListView(APIView):
             try:
                 return Device.objects.filter(user=request.user.id, device_name=request.DATA['device_name']).first()
 
-                #print("device_pk == " + str(device_pk))
-
-                # This is based on the assumption that users can only see
-                # devices that include those users as owners. (nb reverse relation)
-                # Should this assumption be changed, this code must change as well:
-                # return request.user.devices.get(pk=device_pk)
-
-                # Now changed to models and open-access:
-                # return Device.objects.get(pk=device_pk)
-
             except Device.DoesNotExist:
                 # The device must then be made inside the device_serializer,
                 # which is expecting None.
                 return None
-
-    # def put(self, request, device_pk, format=None):
-    #     device = self.get_device_object(device_pk)
-    #     device_serializer = DeviceSerializer(device, data=request.DATA)
-
-    #     if device_serializer.is_valid():
-    #         device_serializer.save()
-    #         return Response(device_serializer.data)
-    #     return Response(device_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CurrentAtomView(APIView):
@@ -248,24 +193,10 @@ class CurrentDeviceView(APIView):
         try:
             return Device.objects.filter(user=request.user.id, pk=device_pk).first()
 
-            #print("device_pk == " + str(device_pk))
-
-            # This is based on the assumption that users can only see
-            # devices that include those users as owners. (nb reverse relation)
-            # Should this assumption be changed, this code must change as well:
-            # return request.user.devices.get(pk=device_pk)
-
-            # Now changed to models and open-access:
-            # return Device.objects.get(pk=device_pk)
-
         except Device.DoesNotExist:
             # The device must then be made inside the device_serializer,
             # which is expecting None.
             return None
-
-
-
-
 
 
 class DeviceDetailView(APIView):
@@ -278,9 +209,6 @@ class DeviceDetailView(APIView):
          "AnotherAtomName": 465},
      "timestamp": 1417472498}
     """
-
-
-
 
     # NOTE: Unlike in the tutorial, request is passed to get_device_object()
     # because we're not currently importing models. We can import models
@@ -356,10 +284,6 @@ class DeviceDetailView(APIView):
 
     def post(self, request, device_pk, format=None):
 
-        # print("\nRequest == " + str(dir(request)))
-
-        # print(request.user.id)
-
         device_object = self.get_device_object(device_pk)
 
         # You can GET a device if you're a permitted user, but you can't
@@ -376,21 +300,15 @@ class DeviceDetailView(APIView):
 
         atom_serializer_list = []
 
-        # print (str("atom_names == " + str(atom_names)))
         for atom_key, atom_value in atom_dictionary.iteritems():
-            # print atom_name
-            atom_object = self.get_atom_object(atom_key, device_object)
-            # print("atom == " + str(atom))
-            atom_data = {'atom_name': atom_key, 'value': atom_value, 'device': device_object.pk, 'timestamp': timestamp}
-            # print("atom_data == " + str(atom_data))
-            atom_serializer = AtomSerializer(atom_object, data=atom_data)
-            # print("atom_serializer == " + str(dir(atom_serializer)))
 
-            # for each_dirname in dir(atom_serializer):
-            #    print str(each_dirname) + ": " + (str(getattr(atom_serializer, each_dirname)))
+            atom_object = self.get_atom_object(atom_key, device_object)
+
+            atom_data = {'atom_name': atom_key, 'value': atom_value, 'device': device_object.pk, 'timestamp': timestamp}
+
+            atom_serializer = AtomSerializer(atom_object, data=atom_data)
 
             if atom_serializer.is_valid():
-                # print("atom_serializer.is_valid == True")
                 atom_serializer_list.append(atom_serializer)
 
             else:
@@ -411,10 +329,6 @@ class DeviceDetailView(APIView):
             data_data = {'value': atom_value, 'atom': atom_object.pk, 'timestamp': timestamp}
 
             data_serializer = DataSerializer(data=data_data)
-
-            print(str(atom_key) + ", " + str(atom_value) + " == " + str(data_serializer.is_valid()))
-
-            print(str(data_serializer.errors))
 
             if data_serializer.is_valid():
 
