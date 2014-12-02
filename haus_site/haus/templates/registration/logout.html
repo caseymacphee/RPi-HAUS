@@ -1,8 +1,15 @@
-{% extends "registration/registration_base.html" %}
-{% load i18n %}
+{% load staticfiles %}
+<html>
+<head>
+<title>Logged out</title>
+<link rel="stylesheet" type="text/css" href="{% static 'haus/login.css' %}">
+</head>
+<body>
+    <div class='container'>
+        <div ><img class='haus-img' src='{% static "haus/hausresized.png" %}' /></div>
+        <h1 class='header'>You have been logged out.</h1>
+        <h2 class='subheader'>Click <a href='/accounts/login'>here</a> to login</h2>
+    </div>
+</body>
+</html>
 
-{% block title %}{% trans "Logged out" %}{% endblock %}
-
-{% block content %}
-<p>{% trans "Successfully logged out" %}.</p>
-{% endblock %}

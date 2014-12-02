@@ -138,7 +138,7 @@ class DeviceSerializer(serializers.ModelSerializer):
 
         self.was_created = True
 
-        return Device(**attrs)
+        return Device.create(**attrs)
 
 
 
