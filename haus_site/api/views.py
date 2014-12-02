@@ -363,12 +363,6 @@ class DataView(APIView):
 
     def get_device_object(self, device_pk):
         try:
-            # This is based on the assumption that users can only see
-            # devices that include those users as owners. (nb reverse relation)
-            # Should this assumption be changed, this code must change as well:
-            # return request.user.devices.get(pk=device_pk)
-
-            # Now changed to models and open-access:
             return Device.objects.get(pk=device_pk)
 
         except Device.DoesNotExist:
