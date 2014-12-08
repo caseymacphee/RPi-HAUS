@@ -222,6 +222,10 @@ def _install_nginx():
     sudo('/etc/init.d/nginx start')
 
 
+def _set_cronjob():
+    sudo('crontab /home/ubuntu/RPi-HAUS/crondump.txt')
+
+
 @task
 def refresh_django_app():
     run_command_on_selected_server(_refresh_django_app)
@@ -250,6 +254,11 @@ def create_superuser():
 @task
 def install_nginx():
     run_command_on_selected_server(_install_nginx)
+
+
+@task
+def set_cronjob():
+    run_command_on_selected_server(_set_cronjob)
 
 
 @task
